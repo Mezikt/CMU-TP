@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1059128345152",
+    "project_id": "cmu-tp-7ceaa",
+    "storage_bucket": "cmu-tp-7ceaa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1059128345152:android:4227e780320eb195c355a5",
+        "android_client_info": {
+          "package_name": "pt.ipp.estg.cmu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_5zT0cJaTJ5x6bsH0UnxY71jRcePssEg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
