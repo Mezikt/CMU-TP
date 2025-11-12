@@ -7,14 +7,12 @@ plugins {
 
 android {
     namespace = "pt.ipp.estg.cmu"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "pt.ipp.estg.cmu"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -34,8 +32,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        }
     }
     buildFeatures {
         compose = true
@@ -51,11 +51,15 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
+    // Usando a versão do catálogo de versões para navigation-compose
+    implementation(libs.androidx.navigation.compose)
+    // Usando o Firebase BOM atualizado e dependências do catálogo de versões
+    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
-    implementation(libs.firebase.firestore.ktx)
-    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.firestore.ktx) // Versão herdada do BOM
+    implementation(libs.firebase.firestore)    // Versão herdada do BOM
+    implementation(libs.firebase.analytics)    // Do catálogo de versões
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -63,6 +67,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
-    implementation("com.google.firebase:firebase-analytics")
 }
