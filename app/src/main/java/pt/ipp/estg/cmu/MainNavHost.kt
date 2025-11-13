@@ -2,27 +2,19 @@ package pt.ipp.estg.cmu
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import pt.ipp.estg.cmu.ui.Content.HomePage
-import pt.ipp.estg.cmu.ui.Content.Login
-import pt.ipp.estg.cmu.ui.Content.PerfilPage
-import pt.ipp.estg.cmu.ui.Content.SettingsPage
+import pt.ipp.estg.cmu.ui.Content.*
 
 @Composable
 fun MainNavHost(modifier: Modifier = Modifier) {
@@ -30,12 +22,13 @@ fun MainNavHost(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier,
         bottomBar = {
-            BottomAppBar {
+            BottomNavigation {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Home, contentDescription = "Ecrã Principal") },
-                    label = { Text("Home") },
+
+                BottomNavigationItem(
+                    icon = { Icon(Icons.Filled.Home, contentDescription = null) },
+                    label = { Text(stringResource(R.string.nav_home)) },
                     selected = currentDestination?.hierarchy?.any { it.route == "home" } == true,
                     onClick = {
                         navController.navigate("home") {
@@ -47,12 +40,13 @@ fun MainNavHost(modifier: Modifier = Modifier) {
                         }
                     }
                 )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Person, contentDescription = "Ecrã de Perfil") },
-                    label = { Text("Perfil") },
-                    selected = currentDestination?.hierarchy?.any { it.route == "perfil" } == true,
+
+                BottomNavigationItem(
+                    icon = { Icon(Icons.Filled.Place, contentDescription = null) },
+                    label = { Text(stringResource(R.string.nav_map)) },
+                    selected = currentDestination?.hierarchy?.any { it.route == "map" } == true,
                     onClick = {
-                        navController.navigate("perfil") {
+                        navController.navigate("map") {
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true
                             }
@@ -61,12 +55,28 @@ fun MainNavHost(modifier: Modifier = Modifier) {
                         }
                     }
                 )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Settings, contentDescription = "Ecrã de Definições") },
-                    label = { Text("Definições") },
-                    selected = currentDestination?.hierarchy?.any { it.route == "definições" } == true,
+
+                BottomNavigationItem(
+                    icon = { Icon(Icons.Filled.List, contentDescription = null) },
+                    label = { Text(stringResource(R.string.nav_trips)) },
+                    selected = currentDestination?.hierarchy?.any { it.route == "trips" } == true,
                     onClick = {
-                        navController.navigate("definições") {
+                        navController.navigate("trips") {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+
+                BottomNavigationItem(
+                    icon = { Icon(Icons.Filled.Person, contentDescription = null) },
+                    label = { Text(stringResource(R.string.nav_profile)) },
+                    selected = currentDestination?.hierarchy?.any { it.route == "profile" } == true,
+                    onClick = {
+                        navController.navigate("profile") {
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true
                             }
@@ -86,11 +96,14 @@ fun MainNavHost(modifier: Modifier = Modifier) {
             composable("home") {
                 HomePage()
             }
-            composable("perfil") {
-                Login()
+            composable("map") {
+                MapPage()
             }
-            composable("definições") {
-                SettingsPage()
+            composable("trips") {
+                TripsPage()
+            }
+            composable("profile") {
+                ProfilePage()
             }
         }
     }
