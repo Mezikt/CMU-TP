@@ -1,5 +1,6 @@
 package pt.ipp.estg.cmu.ui.Content
 
+import com.google.firebase.firestore.firestore
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,6 +17,7 @@ import com.google.firebase.auth.auth
 import com.google.firebase.auth.userProfileChangeRequest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+
 
 @Composable
 fun RegisterPage(
@@ -122,6 +124,19 @@ fun RegisterPage(
                             displayName = name
                         }
                         user?.updateProfile(profileUpdates)?.await()
+
+                        // 3. Criar um documento para o utilizador na Firestore (CÓDIGO NOVO)
+                        if (user != null) {
+                            // Acede à instância da Firestore através do objeto Firebase
+                            val db = Firebase.firestore
+                            // O resto do código mantém-se igual
+                            val userDocument = mapOf(
+                                "name" to name,
+                                "email" to email,
+                                "points" to 0
+                            )
+                            db.collection("users").document(user.uid).set(userDocument).await()
+                        }
 
                         isLoading = false
                         onRegisterSuccess() // Navega para a app principal

@@ -1,8 +1,23 @@
+
+import java.util.Properties
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.google.gms.services)
+    alias(libs.plugins.ksp)
 }
+
+
+// Lógica para ler o ficheiro properties
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
+
 
 android {
     namespace = "pt.ipp.estg.cmu"
@@ -18,6 +33,11 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // --- INÍCIO DA CORREÇÃO ---
+        // Esta linha torna a chave disponível para o AndroidManifest.xml
+        manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY") ?: "CHAVE_NAO_ENCONTRADA"
+        // --- FIM DA CORREÇÃO ---
     }
 
     buildTypes {
@@ -47,6 +67,7 @@ android {
 }
 
 dependencies {
+    // O seu bloco de dependências mantém-se igual
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -57,7 +78,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.navigation.compose)
-    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.lifecycle.viewmodel.compose)
 
     // Firebase
     implementation(platform(libs.firebase.bom))
@@ -67,6 +88,7 @@ dependencies {
     // Maps
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
 
     // Teste
     testImplementation(libs.junit)
@@ -76,4 +98,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Room Database
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
 }

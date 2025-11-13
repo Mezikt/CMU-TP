@@ -18,6 +18,8 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Firebase // Adicionar este import
+import com.google.firebase.auth.auth   // Adicionar este import
 
 // Classe de dados para organizar os itens da barra de navegação
 data class BottomNavItem(val title: String, val route: String, val icon: ImageVector)
@@ -26,34 +28,32 @@ data class BottomNavItem(val title: String, val route: String, val icon: ImageVe
 fun MainNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
 
+    // --- INÍCIO DA ALTERAÇÃO ---
+    // 1. Verifica se já existe um utilizador autenticado no Firebase no momento da composição.
+    val currentUser = Firebase.auth.currentUser
+    // 2. Define o ponto de partida da navegação com base no resultado da verificação.
+    val startDestination = if (currentUser != null) "main" else "auth"
+    // --- FIM DA ALTERAÇÃO ---
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val showBottomBar = currentRoute in listOf("home", "perfil", "definições") // Lógica simplificada
+    val showBottomBar = currentRoute in listOf("home", "perfil", "definições")
 
     Scaffold(
         modifier = modifier,
         bottomBar = {
-            // Só mostra a barra de navegação se a showBottomBar for verdadeira
             if (showBottomBar) {
-
-                // 1. Lista de Itens de Navegação
                 val items = listOf(
                     BottomNavItem("Início", "home", Icons.Default.Home),
                     BottomNavItem("Perfil", "perfil", Icons.Default.Person),
                     BottomNavItem("Definições", "definições", Icons.Default.Settings)
                 )
-
-                // 2. Componente NavigationBar
                 NavigationBar {
-                    // 3. Loop para criar cada item
                     items.forEach { item ->
                         NavigationBarItem(
-                            // 4. Lógica para saber qual item está selecionado
                             selected = currentRoute == item.route,
-                            // 5. Ação ao clicar: navegar para a rota do item
                             onClick = {
                                 navController.navigate(item.route) {
-                                    // Limpa a pilha de navegação para evitar acumular ecrãs
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
                                     }
@@ -71,10 +71,9 @@ fun MainNavHost(modifier: Modifier = Modifier) {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "auth", // Continua a começar no fluxo de autenticação
+            startDestination = startDestination, // <-- 3. USA A NOVA VARIÁVEL AQUI
             modifier = Modifier.padding(innerPadding)
         ) {
-            // Os vossos grafos de navegação
             authNavGraph(navController)
             mainNavGraph(navController)
         }
