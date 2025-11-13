@@ -16,12 +16,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CMU_TPTheme {
-                // CORREÇÃO: Envolve a tua aplicação numa Surface para lhe dar uma cor de fundo.
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background // Usa a cor de fundo do teu tema
+                    color = MaterialTheme.colorScheme.background
                 ) {
-                    // O MainNavHost agora é desenhado sobre a Surface.
+
                     MainNavHost()
                 }
             }

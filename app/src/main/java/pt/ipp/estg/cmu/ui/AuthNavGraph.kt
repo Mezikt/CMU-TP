@@ -8,13 +8,13 @@ import pt.ipp.estg.cmu.ui.Content.LoginPage
 import pt.ipp.estg.cmu.ui.Content.RegisterPage
 
 fun NavGraphBuilder.authNavGraph(navController: NavHostController) {
-    // A função `navigation` cria um grafo de navegação aninhado
+
     navigation(
-        startDestination = "login", // O ecrã inicial deste fluxo
-        route = "auth"             // O nome do grafo
+        startDestination = "login", // ecrã inicial
+        route = "auth"             // nome do grafo
     ) {
         composable("login") {
-            // Chamada Corrigida: Usar LoginPage
+
             LoginPage(
                 onLoginSuccess = {
                     navController.navigate("main") {
@@ -28,7 +28,7 @@ fun NavGraphBuilder.authNavGraph(navController: NavHostController) {
         }
 
         composable("register") {
-            // Bloco de Registo Ativado e Corrigido
+
             RegisterPage(
                 onRegisterSuccess = {
                     navController.navigate("main") {
