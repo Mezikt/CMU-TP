@@ -3,6 +3,7 @@ package pt.ipp.estg.cmu
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -21,23 +22,20 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Firebase // Adicionar este import
 import com.google.firebase.auth.auth   // Adicionar este import
 
-// Classe de dados para organizar os itens da barra de navegação
 data class BottomNavItem(val title: String, val route: String, val icon: ImageVector)
 
 @Composable
 fun MainNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
 
-    // --- INÍCIO DA ALTERAÇÃO ---
-    // 1. Verifica se já existe um utilizador autenticado no Firebase no momento da composição.
+
     val currentUser = Firebase.auth.currentUser
-    // 2. Define o ponto de partida da navegação com base no resultado da verificação.
+
     val startDestination = if (currentUser != null) "main" else "auth"
-    // --- FIM DA ALTERAÇÃO ---
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val showBottomBar = currentRoute in listOf("home", "perfil", "definições")
+    val showBottomBar = currentRoute in listOf("home","map", "perfil", "definições")
 
     Scaffold(
         modifier = modifier,
@@ -45,6 +43,7 @@ fun MainNavHost(modifier: Modifier = Modifier) {
             if (showBottomBar) {
                 val items = listOf(
                     BottomNavItem("Início", "home", Icons.Default.Home),
+                    BottomNavItem("Mapa", "map", Icons.Default.Map),
                     BottomNavItem("Perfil", "perfil", Icons.Default.Person),
                     BottomNavItem("Definições", "definições", Icons.Default.Settings)
                 )
@@ -71,7 +70,7 @@ fun MainNavHost(modifier: Modifier = Modifier) {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = startDestination, // <-- 3. USA A NOVA VARIÁVEL AQUI
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding)
         ) {
             authNavGraph(navController)

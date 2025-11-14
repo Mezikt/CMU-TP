@@ -10,8 +10,8 @@ import pt.ipp.estg.cmu.ui.Content.RegisterPage
 fun NavGraphBuilder.authNavGraph(navController: NavHostController) {
 
     navigation(
-        startDestination = "login", // ecrã inicial
-        route = "auth"             // nome do grafo
+        startDestination = "login",
+        route = "auth"
     ) {
         composable("login") {
 

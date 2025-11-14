@@ -1,5 +1,5 @@
 package pt.ipp.estg.cmu.ui.Content
-
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -29,35 +29,30 @@ fun LoginPage(
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    // --- MELHORIA DE DESIGN ---
-    // Usar um Box para garantir que o conteúdo fica perfeitamente centrado
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(32.dp), // Aumentar o padding para dar mais margem
+            .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            // Adiciona um espaçamento uniforme de 16.dp entre cada elemento na Column
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // Título principal da aplicação
             Text(
                 text = "Mobilidade Suave",
                 style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary // Usar a cor primária do tema para destaque
+                color = MaterialTheme.colorScheme.primary
             )
 
             // Subtítulo
             Text(
                 text = "Bem-vindo de volta!",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant // Cor mais suave para o subtítulo
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // Espaço maior após os títulos para separar do formulário
             Spacer(modifier = Modifier.height(16.dp))
 
             // Campo de texto para o Email
@@ -70,7 +65,6 @@ fun LoginPage(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
 
-            // Campo de texto para a Password
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -81,7 +75,6 @@ fun LoginPage(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
 
-            // Botão de Login
             Button(
                 onClick = {
                     if (email.isNotBlank() && password.isNotBlank()) {
@@ -94,6 +87,10 @@ fun LoginPage(
                             } catch (e: Exception) {
                                 isLoading = false
                                 Toast.makeText(context, "Falha no login: ${e.message}", Toast.LENGTH_LONG).show()
+
+                                Log.d("TAG", "Falha no login: ${e.message}");
+                                Log.d("TAG", "Falha no login: ${e.stackTraceToString()} ");
+
                             }
                         }
                     } else {
@@ -102,9 +99,9 @@ fun LoginPage(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp), // Altura standard para melhor toque
+                    .height(50.dp),
                 enabled = !isLoading,
-                shape = MaterialTheme.shapes.medium // Cantos ligeiramente arredondados
+                shape = MaterialTheme.shapes.medium
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
@@ -116,7 +113,6 @@ fun LoginPage(
                 }
             }
 
-            // Botão para navegar para o ecrã de Registo
             TextButton(onClick = onNavigateToRegister) {
                 Text("Não tem conta? Registe-se")
             }

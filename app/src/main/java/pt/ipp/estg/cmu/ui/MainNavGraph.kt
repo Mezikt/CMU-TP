@@ -10,6 +10,8 @@ import androidx.navigation.navigation
 import pt.ipp.estg.cmu.ui.Content.HomePage
 import pt.ipp.estg.cmu.ui.Content.PerfilPage
 import pt.ipp.estg.cmu.ui.Content.SettingsPage
+import pt.ipp.estg.cmu.ui.Content.MapPage
+
 
 fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
     navigation(
@@ -19,16 +21,17 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
         composable("home") {
             HomePage()
         }
+
+        composable("map"){
+            MapPage()
+        }
         composable("perfil") {
 
             PerfilPage(
                 onLogout = {
-                    // Termina a sessão do utilizador no Firebase
                     Firebase.auth.signOut()
 
-                    //  o utilizador volta para o ecrã de autenticação
                     navController.navigate("auth") {
-                        // Limpa todo o histórico de navegação para que o utilizador não possa voltar atrás
                         popUpTo("main") { inclusive = true }
                     }
                 }

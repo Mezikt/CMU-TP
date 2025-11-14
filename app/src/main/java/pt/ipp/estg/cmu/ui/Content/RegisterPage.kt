@@ -27,41 +27,39 @@ fun RegisterPage(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    val auth = Firebase.auth
+
+
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    // --- MELHORIA DE DESIGN ---
-    // Usar um Box para garantir que o conteúdo fica perfeitamente centrado
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(32.dp), // Aumentar o padding para dar mais margem
+            .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            // Adiciona um espaçamento uniforme de 16.dp entre cada elemento
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // Título
             Text(
                 text = "Crie a sua conta",
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.primary
             )
 
-            // Subtítulo
             Text(
                 text = "É rápido e fácil.",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // Campo de texto para o Nome
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -70,7 +68,7 @@ fun RegisterPage(
                 singleLine = true
             )
 
-            // Campo de texto para o Email
+
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -80,7 +78,7 @@ fun RegisterPage(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
 
-            // Campo de texto para a Password
+
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -91,7 +89,7 @@ fun RegisterPage(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
 
-            // Campo de texto para confirmar a Password
+
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
@@ -102,7 +100,6 @@ fun RegisterPage(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
 
-            // Botão de Registo
             Button(
                 onClick = {
                     if (name.isBlank() || email.isBlank() || password.isBlank()) {
@@ -116,7 +113,7 @@ fun RegisterPage(
                     isLoading = true
                     scope.launch {
                         try {
-                            val authResult = Firebase.auth.createUserWithEmailAndPassword(email, password).await()
+                            val authResult = auth.createUserWithEmailAndPassword(email, password).await()
                             val user = authResult.user
                             val profileUpdates = userProfileChangeRequest {
                                 displayName = name
@@ -155,7 +152,7 @@ fun RegisterPage(
                 }
             }
 
-            // Botão para voltar para o ecrã de Login
+
             TextButton(onClick = onBackToLogin) {
                 Text("Já tem uma conta? Faça login")
             }
