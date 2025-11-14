@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
+    id("com.google.devtools.ksp") version "2.0.21-1.0.25"
 }
 
 android {
@@ -50,15 +51,48 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
+    // Removida dependência material3
+    // implementation(libs.androidx.compose.material3)
+    // Adiciona Material (estável) para evitar o uso de APIs experimentais
+    implementation("androidx.compose.material:material:1.9.4")
+    // Compose icons
+    implementation("androidx.compose.material:material-icons-extended:1.9.4")
     // Usando a versão do catálogo de versões para navigation-compose
     implementation(libs.androidx.navigation.compose)
-    // Usando o Firebase BOM atualizado e dependências do catálogo de versões
+
+    // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
-    implementation(libs.firebase.firestore.ktx) // Versão herdada do BOM
-    implementation(libs.firebase.firestore)    // Versão herdada do BOM
-    implementation(libs.firebase.analytics)    // Do catálogo de versões
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.analytics)
+    implementation("com.google.firebase:firebase-database-ktx")
+
+    // Room (cache local)
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
+
+    // Retrofit (API REST)
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Location & Maps
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.google.maps.android:maps-compose:4.4.1")
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+
+    // WindowSizeClass (responsive design)
+    // removida dependência material3 window size class
+    // implementation("androidx.compose.material3:material3-window-size-class:1.3.1")
+
+    // ViewModel & Coroutines
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+
+    // WorkManager (para sincronização background opcional)
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
