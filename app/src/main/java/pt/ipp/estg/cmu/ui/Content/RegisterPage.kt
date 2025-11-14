@@ -1,6 +1,5 @@
 package pt.ipp.estg.cmu.ui.Content
 
-import com.google.firebase.firestore.firestore
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,9 +14,9 @@ import androidx.compose.ui.unit.dp
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.userProfileChangeRequest
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-
 
 @Composable
 fun RegisterPage(
@@ -28,140 +27,138 @@ fun RegisterPage(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    // Estados para os campos de input
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    Column(
+    // --- MELHORIA DE DESIGN ---
+    // Usar um Box para garantir que o conteúdo fica perfeitamente centrado
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(32.dp), // Aumentar o padding para dar mais margem
+        contentAlignment = Alignment.Center
     ) {
-
-        Text(
-            text = "Crie a sua conta",
-            style = MaterialTheme.typography.headlineLarge
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Campo de texto para o Nome
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Nome") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Campo de texto para o Email
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Campo de texto para a Password
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Campo de texto para confirmar a Password
-        OutlinedTextField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it },
-            label = { Text("Confirmar Password") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Botão de Registo
-        Button(
-            onClick = {
-                // Validações antes de chamar o Firebase
-                if (name.isBlank() || email.isBlank() || password.isBlank()) {
-                    Toast.makeText(context, "Preencha todos os campos.", Toast.LENGTH_SHORT).show()
-                    return@Button
-                }
-                if (password != confirmPassword) {
-                    Toast.makeText(context, "As passwords não coincidem.", Toast.LENGTH_SHORT).show()
-                    return@Button
-                }
-
-                isLoading = true
-                scope.launch {
-                    try {
-                        // 1. Criar o utilizador com email e password
-                        val authResult = Firebase.auth.createUserWithEmailAndPassword(email, password).await()
-
-                        // 2. Atualizar o perfil do utilizador para adicionar o nome
-                        val user = authResult.user
-                        val profileUpdates = userProfileChangeRequest {
-                            displayName = name
-                        }
-                        user?.updateProfile(profileUpdates)?.await()
-
-                        // 3. Criar um documento para o utilizador na Firestore (CÓDIGO NOVO)
-                        if (user != null) {
-                            // Acede à instância da Firestore através do objeto Firebase
-                            val db = Firebase.firestore
-                            // O resto do código mantém-se igual
-                            val userDocument = mapOf(
-                                "name" to name,
-                                "email" to email,
-                                "points" to 0
-                            )
-                            db.collection("users").document(user.uid).set(userDocument).await()
-                        }
-
-                        isLoading = false
-                        onRegisterSuccess() // Navega para a app principal
-
-                    } catch (e: Exception) {
-                        isLoading = false
-                        Toast.makeText(context, "Falha no registo: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            // Adiciona um espaçamento uniforme de 16.dp entre cada elemento
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
-            } else {
-                Text("Registar")
+
+            // Título
+            Text(
+                text = "Crie a sua conta",
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            // Subtítulo
+            Text(
+                text = "É rápido e fácil.",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            // Campo de texto para o Nome
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Nome") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            // Campo de texto para o Email
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            )
+
+            // Campo de texto para a Password
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            )
+
+            // Campo de texto para confirmar a Password
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = { Text("Confirmar Password") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            )
+
+            // Botão de Registo
+            Button(
+                onClick = {
+                    if (name.isBlank() || email.isBlank() || password.isBlank()) {
+                        Toast.makeText(context, "Preencha todos os campos.", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    if (password != confirmPassword) {
+                        Toast.makeText(context, "As passwords não coincidem.", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    isLoading = true
+                    scope.launch {
+                        try {
+                            val authResult = Firebase.auth.createUserWithEmailAndPassword(email, password).await()
+                            val user = authResult.user
+                            val profileUpdates = userProfileChangeRequest {
+                                displayName = name
+                            }
+                            user?.updateProfile(profileUpdates)?.await()
+                            if (user != null) {
+                                val db = Firebase.firestore
+                                val userDocument = mapOf(
+                                    "name" to name,
+                                    "email" to email,
+                                    "points" to 0
+                                )
+                                db.collection("users").document(user.uid).set(userDocument).await()
+                            }
+                            isLoading = false
+                            onRegisterSuccess()
+                        } catch (e: Exception) {
+                            isLoading = false
+                            Toast.makeText(context, "Falha no registo: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                enabled = !isLoading,
+                shape = MaterialTheme.shapes.medium
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Registar")
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Botão para voltar para o ecrã de Login
-        TextButton(onClick = onBackToLogin) {
-            Text("Já tem uma conta? Faça login")
+            // Botão para voltar para o ecrã de Login
+            TextButton(onClick = onBackToLogin) {
+                Text("Já tem uma conta? Faça login")
+            }
         }
     }
 }

@@ -22,99 +22,104 @@ fun LoginPage(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    // CoroutineScope para lançar a chamada de autenticação
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    // Variáveis de estado para guardar o email e a password inseridos pelo utilizador
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) } // Para mostrar um indicador de progresso
+    var isLoading by remember { mutableStateOf(false) }
 
-    Column(
+    // --- MELHORIA DE DESIGN ---
+    // Usar um Box para garantir que o conteúdo fica perfeitamente centrado
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp), // Adiciona espaçamento à volta
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(32.dp), // Aumentar o padding para dar mais margem
+        contentAlignment = Alignment.Center
     ) {
-
-        Text(
-            text = "Bem-vindo!",
-            style = MaterialTheme.typography.headlineLarge
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Campo de texto para o Email
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Campo de texto para a Password
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(), // Esconde a password
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Botão de Login
-        Button(
-            onClick = {
-                // Validação simples para não fazer chamadas à API desnecessariamente
-                if (email.isNotBlank() && password.isNotBlank()) {
-                    isLoading = true
-                    // Lançar a coroutine para fazer o login
-                    scope.launch {
-                        try {
-                            // Usar signIn, não createUser. E usar as variáveis!
-                            Firebase.auth.signInWithEmailAndPassword(email, password).await()
-
-                            // Se a linha de cima não der erro, o login foi bem-sucedido
-                            isLoading = false
-                            onLoginSuccess() // Navega para o ecrã principal
-
-                        } catch (e: Exception) {
-                            // Se houver um erro (ex: password errada), mostra uma mensagem
-                            isLoading = false
-                            Toast.makeText(context, "Falha no login: ${e.message}", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                } else {
-                    Toast.makeText(context, "Por favor, preencha todos os campos.", Toast.LENGTH_SHORT).show()
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading // Desativa o botão enquanto está a carregar
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            // Adiciona um espaçamento uniforme de 16.dp entre cada elemento na Column
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            } else {
-                Text("Login")
+
+            // Título principal da aplicação
+            Text(
+                text = "Mobilidade Suave",
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.primary // Usar a cor primária do tema para destaque
+            )
+
+            // Subtítulo
+            Text(
+                text = "Bem-vindo de volta!",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant // Cor mais suave para o subtítulo
+            )
+
+            // Espaço maior após os títulos para separar do formulário
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Campo de texto para o Email
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            )
+
+            // Campo de texto para a Password
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            )
+
+            // Botão de Login
+            Button(
+                onClick = {
+                    if (email.isNotBlank() && password.isNotBlank()) {
+                        isLoading = true
+                        scope.launch {
+                            try {
+                                Firebase.auth.signInWithEmailAndPassword(email, password).await()
+                                isLoading = false
+                                onLoginSuccess()
+                            } catch (e: Exception) {
+                                isLoading = false
+                                Toast.makeText(context, "Falha no login: ${e.message}", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    } else {
+                        Toast.makeText(context, "Por favor, preencha todos os campos.", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp), // Altura standard para melhor toque
+                enabled = !isLoading,
+                shape = MaterialTheme.shapes.medium // Cantos ligeiramente arredondados
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Login")
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Botão para navegar para o ecrã de Registo
-        TextButton(onClick = onNavigateToRegister) {
-            Text("Não tem conta? Registe-se")
+            // Botão para navegar para o ecrã de Registo
+            TextButton(onClick = onNavigateToRegister) {
+                Text("Não tem conta? Registe-se")
+            }
         }
     }
 }

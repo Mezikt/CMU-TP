@@ -1,4 +1,4 @@
-package pt.ipp.estg.cmu.ui.Content // ou a sua pasta model
+package pt.ipp.estg.cmu.ui.Content
 
 import com.google.android.gms.maps.model.LatLng
 

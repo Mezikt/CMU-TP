@@ -3,6 +3,7 @@ package pt.ipp.estg.cmu.ui.Content
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
@@ -20,7 +21,8 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.maps.android.compose.*
 import kotlinx.coroutines.tasks.await
-
+import pt.ipp.estg.cmu.R // Import para aceder aos recursos (drawables)
+import pt.ipp.estg.cmu.bitmapDescriptorFromVector // Import da nossa função auxiliar
 
 @SuppressLint("MissingPermission")
 @Composable
@@ -42,7 +44,10 @@ fun HomePage() {
         }
     )
 
+    // Temos dois LaunchedEffect a correr com a mesma chave (Unit).
+    // É melhor prática juntá-los para evitar comportamentos inesperados.
     LaunchedEffect(Unit) {
+        // Pedir permissão de localização
         if (!hasLocationPermission) {
             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
@@ -52,22 +57,17 @@ fun HomePage() {
         position = CameraPosition.fromLatLngZoom(LatLng(41.1579, -8.6291), 12f)
     }
 
-    // --- CÓDIGO NOVO ---
-    // 1. Estado para guardar a lista de pontos de mobilidade
     var mobilityPoints by remember { mutableStateOf<List<MobilityPoint>>(emptyList()) }
 
-    // 2. Efeito para ir buscar os dados à Firestore uma vez quando o Composable é criado
+    // Efeito para ir buscar os dados à Firestore uma vez
     LaunchedEffect(Unit) {
         val db = Firebase.firestore
         try {
-            // Vai à coleção "mobility_points" e obtém todos os documentos
             val result = db.collection("mobility_points").get().await()
-            // Mapeia cada documento para o nosso objeto de dados MobilityPoint
             val points = result.documents.mapNotNull { doc ->
                 val name = doc.getString("name") ?: ""
                 val type = doc.getString("type") ?: ""
                 val location = doc.getGeoPoint("location")
-                // Só cria o objeto se a localização existir
                 if (location != null) {
                     MobilityPoint(
                         id = doc.id,
@@ -76,20 +76,18 @@ fun HomePage() {
                         location = LatLng(location.latitude, location.longitude)
                     )
                 } else {
-                    null // Ignora documentos sem localização
+                    null
                 }
             }
-            // Atualiza o estado com a lista de pontos
             mobilityPoints = points
         } catch (e: Exception) {
-            // Pode adicionar um Toast ou Log para lidar com erros de rede
             e.printStackTrace()
         }
     }
-    // --- FIM DO CÓDIGO NOVO ---
 
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
+    // Este efeito agora depende da permissão para obter a localização
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) {
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -108,16 +106,29 @@ fun HomePage() {
                 cameraPositionState = cameraPositionState,
                 properties = MapProperties(isMyLocationEnabled = true)
             ) {
-                // --- CÓDIGO NOVO ---
-                // 3. Loop que desenha um marcador no mapa para cada ponto na nossa lista de estado
+                // --- INÍCIO DA ALTERAÇÃO ---
                 mobilityPoints.forEach { point ->
+                    // 1. Determina qual o ID do recurso do ícone a usar
+                    val iconResourceId = when (point.type) {
+                        "scooter" -> R.drawable.ic_scooter
+                        "bike" -> R.drawable.ic_bike
+                        else -> null // Não mostra ícone se o tipo for desconhecido
+                    }
+
+                    // 2. Converte o ID do recurso num BitmapDescriptor que o mapa entende
+                    val iconBitmap = iconResourceId?.let {
+                        bitmapDescriptorFromVector(context, it)
+                    }
+
+                    // 3. Usa o ícone personalizado no Marcador
                     Marker(
                         state = MarkerState(position = point.location),
                         title = point.name,
-                        snippet = "Tipo: ${point.type}" // Texto que aparece ao clicar no marcador
+                        snippet = "Tipo: ${point.type}",
+                        icon = iconBitmap // Passa o nosso ícone aqui
                     )
                 }
-                // --- FIM DO CÓDIGO NOVO ---
+                // --- FIM DA ALTERAÇÃO ---
             }
         } else {
             Text(
