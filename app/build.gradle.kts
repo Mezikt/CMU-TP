@@ -1,4 +1,3 @@
-
 import java.util.Properties
 
 
@@ -79,6 +78,9 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.navigation.compose)
     implementation(libs.lifecycle.viewmodel.compose)
+
+    // DataStore Preferences
+    implementation(libs.androidx.datastore.preferences)
 
     // Firebase
     implementation(platform(libs.firebase.bom))

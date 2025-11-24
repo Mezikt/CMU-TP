@@ -6,13 +6,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import pt.ipp.estg.cmu.ui.theme.CMU_TPTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import pt.ipp.estg.cmu.ui.theme.ThemeViewModel
+import androidx.compose.runtime.collectAsState
 
 @Composable
-fun SettingsPage() {
-    var isDarkTheme by remember { mutableStateOf(false) }
+fun SettingsPage(
+    // Allow injection of a ThemeViewModel for testing; default to activity-scoped
+    themeViewModel: ThemeViewModel = viewModel()
+) {
+    val isDarkTheme by themeViewModel.isDark.collectAsState()
     var notificationsEnabled by remember { mutableStateOf(true) }
     var locationServicesEnabled by remember { mutableStateOf(true) }
 
@@ -42,7 +49,7 @@ fun SettingsPage() {
         SwitchSettingItem(
             title = "Theme (Dark Mode)",
             checked = isDarkTheme,
-            onCheckedChange = { isDarkTheme = it }
+            onCheckedChange = { themeViewModel.setDark(it) }
         )
         // You can add logic here to handle "System Default"
         SwitchSettingItem(
