@@ -7,6 +7,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import pt.ipp.estg.cmu.ui.Content.FriendsPage
+import pt.ipp.estg.cmu.ui.Content.HistoryPage
 import pt.ipp.estg.cmu.ui.Content.HomePage
 import pt.ipp.estg.cmu.ui.Content.PerfilPage
 import pt.ipp.estg.cmu.ui.Content.SettingsPage
@@ -21,7 +23,6 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
         composable("home") {
             HomePage()
         }
-
         composable("map"){
             MapPage()
         }
@@ -34,11 +35,26 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
                     navController.navigate("auth") {
                         popUpTo("main") { inclusive = true }
                     }
-                }
+                },
+                onNavigateToHistory = { navController.navigate("history") },
+                onNavigateToFriends = { navController.navigate("friends") }
+
             )
         }
         composable("definições") {
             SettingsPage()
+        }
+
+        composable("friends"){
+            FriendsPage(
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable("history"){
+            HistoryPage(
+                onNavigateBack = { navController.navigateUp() }
+            )
         }
     }
 }
