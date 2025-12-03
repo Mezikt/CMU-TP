@@ -91,6 +91,7 @@ dependencies {
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
+    implementation("com.google.maps.android:android-maps-utils:2.3.0") // FIX: Add maps-utils
 
     // Teste
     testImplementation(libs.junit)

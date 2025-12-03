@@ -13,6 +13,7 @@ import pt.ipp.estg.cmu.ui.Content.HomePage
 import pt.ipp.estg.cmu.ui.Content.PerfilPage
 import pt.ipp.estg.cmu.ui.Content.SettingsPage
 import pt.ipp.estg.cmu.ui.Content.MapPage
+import pt.ipp.estg.cmu.ui.Content.TripRecordingPage
 
 
 fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
@@ -21,7 +22,7 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
         route = "main"
     ) {
         composable("home") {
-            HomePage()
+            HomePage(navController = navController) // Pass navController
         }
         composable("map"){
             MapPage()
@@ -53,6 +54,12 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
 
         composable("history"){
             HistoryPage(
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable("trip_recording") { // Add new destination
+            TripRecordingPage(
                 onNavigateBack = { navController.navigateUp() }
             )
         }

@@ -5,9 +5,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 
 @Composable
-fun HomePage() {
+fun HomePage(navController: NavHostController) { // Receive NavController
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -33,10 +34,10 @@ fun HomePage() {
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Button(onClick = { /* TODO: Navigate to map or search */ }) {
+            Button(onClick = { navController.navigate("map") }) { // Navigate to map
                 Text("Find a Ride")
             }
-            Button(onClick = { /* TODO: Navigate to trip recording */ }) {
+            Button(onClick = { navController.navigate("trip_recording") }) { // Navigate to trip recording
                 Text("Record a Trip")
             }
         }
