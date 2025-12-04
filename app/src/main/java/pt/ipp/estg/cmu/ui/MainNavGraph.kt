@@ -13,6 +13,7 @@ import pt.ipp.estg.cmu.ui.Content.HomePage
 import pt.ipp.estg.cmu.ui.Content.PerfilPage
 import pt.ipp.estg.cmu.ui.Content.SettingsPage
 import pt.ipp.estg.cmu.ui.Content.MapPage
+import pt.ipp.estg.cmu.ui.Content.ChangePasswordPage
 import pt.ipp.estg.cmu.ui.Content.TripRecordingPage
 
 
@@ -43,7 +44,7 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
             )
         }
         composable("definições") {
-            SettingsPage()
+            SettingsPage(toChangePassword = { navController.navigate("changePassword") })
         }
 
         composable("friends"){
@@ -58,6 +59,11 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
             )
         }
 
+        composable("changePassword"){
+            ChangePasswordPage(
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
         composable("trip_recording") { // Add new destination
             TripRecordingPage(
                 onNavigateBack = { navController.navigateUp() }

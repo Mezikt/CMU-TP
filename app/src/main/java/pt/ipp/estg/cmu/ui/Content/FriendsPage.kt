@@ -17,17 +17,14 @@ import androidx.compose.ui.unit.dp
 fun FriendsPage(
     onNavigateBack: () -> Unit,
 ) {
-    // Box para permitir sobrepor elementos
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Botão de voltar, alinhado no canto superior esquerdo
         ButtonBack(
             onClick = onNavigateBack,
             modifier = Modifier.align(Alignment.TopStart)
         )
 
-        // Texto, alinhado ao centro do Box
         Text(
             text = "Página de Amigos",
             modifier = Modifier.align(Alignment.Center)
@@ -43,7 +40,7 @@ private fun ButtonBack(
 ) {
     IconButton(
         onClick = onClick,
-        modifier = modifier.padding(8.dp) // Adiciona um padding para não colar na borda
+        modifier = modifier.padding(8.dp)
     ) {
         Icon(
             imageVector = Icons.Default.ArrowBack,

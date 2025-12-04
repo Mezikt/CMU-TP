@@ -13,11 +13,14 @@ import pt.ipp.estg.cmu.ui.theme.CMU_TPTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import pt.ipp.estg.cmu.ui.theme.ThemeViewModel
 import androidx.compose.runtime.collectAsState
+import androidx.navigation.NavHostController
 
 @Composable
 fun SettingsPage(
     // Allow injection of a ThemeViewModel for testing; default to activity-scoped
+    toChangePassword: () -> Unit,
     themeViewModel: ThemeViewModel = viewModel()
+
 ) {
     val isDarkTheme by themeViewModel.isDark.collectAsState()
     var notificationsEnabled by remember { mutableStateOf(true) }
@@ -34,7 +37,7 @@ fun SettingsPage(
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        SettingItem(title = "Change Password", onClick = { /* TODO: Handle click */ })
+        SettingItem(title = "Change Password", onClick = toChangePassword)
         SettingItem(title = "Update Email Address", onClick = { /* TODO: Handle click */ })
         SettingItem(title = "Manage Profile Information", onClick = { /* TODO: Handle click */ })
 
@@ -67,14 +70,18 @@ fun SettingsPage(
 
 @Composable
 private fun SettingItem(title: String, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = title, style = MaterialTheme.typography.bodyLarge)
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()){
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+        }
     }
 }
 
@@ -96,13 +103,5 @@ private fun SwitchSettingItem(
             checked = checked,
             onCheckedChange = onCheckedChange
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SettingsPagePreview() {
-    CMU_TPTheme {
-        SettingsPage()
     }
 }
