@@ -3,6 +3,7 @@ package pt.ipp.estg.cmu.ui.Content
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.*
@@ -24,6 +25,7 @@ fun ProfilePage(
     onLogout: () -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToFriends: () -> Unit,
+    onNavigateToLeaderboard: () -> Unit, // Added for Leaderboard navigation
     profileViewModel: ProfileViewModel = viewModel()
 ) {
     val userProfile by profileViewModel.userProfile.collectAsState(initial = null)
@@ -35,22 +37,18 @@ fun ProfilePage(
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         when {
-            // 1. First, check for an error message and display it
             errorMessage != null -> {
                 ErrorContent(
                     message = errorMessage!!,
                     onRetry = { profileViewModel.refreshProfile() }
                 )
             }
-            // 2. Then, check if the user is authenticated
             Firebase.auth.currentUser == null -> {
                 NotAuthenticatedContent(onNavigateToLogin = onLogout)
             }
-            // 3. If no user profile data is available yet, show loading
             userProfile == null -> {
                 CircularProgressIndicator()
             }
-            // 4. Finally, if everything is fine, show the profile
             else -> {
                 ProfileContent(
                     name = userProfile!!.name,
@@ -58,6 +56,7 @@ fun ProfilePage(
                     points = userProfile!!.points,
                     onNavigateToHistory = onNavigateToHistory,
                     onNavigateToFriends = onNavigateToFriends,
+                    onNavigateToLeaderboard = onNavigateToLeaderboard, // Pass down
                     onLogout = {
                         profileViewModel.onLogout()
                         onLogout()
@@ -92,6 +91,7 @@ private fun ProfileContent(
     points: Long,
     onNavigateToHistory: () -> Unit,
     onNavigateToFriends: () -> Unit,
+    onNavigateToLeaderboard: () -> Unit, // Added for Leaderboard navigation
     onLogout: () -> Unit
 ) {
     Column(
@@ -120,6 +120,8 @@ private fun ProfileContent(
         ProfileMenuItem(icon = Icons.Filled.History, text = "Histórico de Viagens", onClick = onNavigateToHistory)
         Divider()
         ProfileMenuItem(icon = Icons.Filled.People, text = "Amigos", onClick = onNavigateToFriends)
+        Divider()
+        ProfileMenuItem(icon = Icons.Filled.Leaderboard, text = "Leaderboard", onClick = onNavigateToLeaderboard)
 
         Spacer(modifier = Modifier.weight(1f)) 
 

@@ -29,7 +29,8 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
                     navController.navigate("auth") { popUpTo("main") { inclusive = true } }
                 },
                 onNavigateToHistory = { navController.navigate("history") },
-                onNavigateToFriends = { navController.navigate("friends") }
+                onNavigateToFriends = { navController.navigate("friends") },
+                onNavigateToLeaderboard = { navController.navigate("leaderboard") } // Added navigation to Leaderboard
             )
         }
         composable("settings") {

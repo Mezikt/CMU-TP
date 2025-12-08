@@ -9,6 +9,7 @@ import pt.ipp.estg.cmu.data.MobilityPoint
 data class MapUiState(
     val mobilityPoints: List<MobilityPoint> = emptyList(),
     val selectedFilter: String? = MobilityTypeFilter.ALL.type,
+    val searchQuery: String = "", // Added to hold the search query
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val userLocation: LatLng? = null

@@ -75,6 +75,9 @@ fun MapPage(navController: NavController) {
                     val userLatLng = LatLng(location.latitude, location.longitude)
                     mapViewModel.setUserLocation(userLatLng)
                     cameraPositionState.position = CameraPosition.fromLatLngZoom(userLatLng, 15f)
+                } else {
+                     mapViewModel.setUserLocation(LatLng(41.1579, -8.6291))
+                     cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(41.1579, -8.6291), 12f)
                 }
             }
         }
@@ -99,15 +102,14 @@ fun MapPage(navController: NavController) {
                     title = point.name,
                     snippet = "Type: ${point.type}",
                     icon = iconBitmap,
-                    onClick = { // FIX: Changed from onInfoWindowClick to onClick
+                    onClick = { 
                         selectedPoint = point
-                        false // Return false to also show the info window
+                        false 
                     }
                 )
             }
         }
 
-        // Show the Bottom Sheet when a point is selected
         if (selectedPoint != null) {
             ModalBottomSheet(
                 onDismissRequest = { selectedPoint = null },
@@ -133,12 +135,17 @@ fun MapPage(navController: NavController) {
             }
         }
 
-        // Filter Buttons UI
+        // Search and Filter UI
         Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 16.dp)
+                .padding(top = 16.dp, start = 16.dp, end = 16.dp)
         ) {
+            SearchBar(
+                query = uiState.searchQuery,
+                onQueryChange = { mapViewModel.onSearchQueryChange(it) }
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             FilterButtons(
                 selectedFilter = uiState.selectedFilter,
                 onFilterSelected = { filter -> mapViewModel.setSelectedFilter(filter) }
@@ -166,12 +173,24 @@ fun MapPage(navController: NavController) {
 }
 
 @Composable
+private fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        label = { Text("Search by name...") },
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true
+    )
+}
+
+@Composable
 private fun FilterButtons(
     selectedFilter: String?,
     onFilterSelected: (MobilityTypeFilter) -> Unit
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
     ) {
         Button(
             onClick = { onFilterSelected(MobilityTypeFilter.ALL) },
@@ -179,12 +198,14 @@ private fun FilterButtons(
         ) {
             Text("All")
         }
+        Spacer(modifier = Modifier.width(8.dp))
         Button(
             onClick = { onFilterSelected(MobilityTypeFilter.SCOOTER) },
             enabled = selectedFilter != MobilityTypeFilter.SCOOTER.type
         ) {
             Text("Scooters")
         }
+        Spacer(modifier = Modifier.width(8.dp))
         Button(
             onClick = { onFilterSelected(MobilityTypeFilter.BIKE) },
             enabled = selectedFilter != MobilityTypeFilter.BIKE.type

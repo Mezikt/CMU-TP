@@ -22,24 +22,41 @@ class MapViewModel(
 
     private val _userLocation = MutableStateFlow<LatLng?>(null)
     private val _selectedFilter = MutableStateFlow(MobilityTypeFilter.ALL)
+    private val _searchQuery = MutableStateFlow("") // Added for search functionality
     private val _isLoading = MutableStateFlow(false)
     private val _errorMessage = MutableStateFlow<String?>(null)
 
+    // FIX: Restructure combine to handle more than 5 flows
     val uiState: StateFlow<MapUiState> = combine(
         repository.mobilityPoints,
         _selectedFilter,
+        _searchQuery,
         _isLoading,
-        _errorMessage,
-        _userLocation
-    ) { mobilityPoints, selectedFilter, isLoading, errorMessage, userLocation ->
-        val filteredPoints = if (selectedFilter == MobilityTypeFilter.ALL) {
+        _errorMessage
+    ) { mobilityPoints, selectedFilter, searchQuery, isLoading, errorMessage ->
+        val filteredPointsByType = if (selectedFilter == MobilityTypeFilter.ALL) {
             mobilityPoints
         } else {
             mobilityPoints.filter { it.type == selectedFilter.type }
         }
+
+        val finalFilteredPoints = if (searchQuery.isBlank()) {
+            filteredPointsByType
+        } else {
+            filteredPointsByType.filter { it.name.contains(searchQuery, ignoreCase = true) }
+        }
+        // Use a tuple to pass the processed data to the next combine
+        Triple(finalFilteredPoints, selectedFilter, searchQuery) to (isLoading to errorMessage)
+
+    }.combine(_userLocation) { (processedData, loadingStatus), userLocation ->
+        val (finalFilteredPoints, selectedFilter, searchQuery) = processedData
+        val (isLoading, errorMessage) = loadingStatus
+
+        // Construct the final MapUiState
         MapUiState(
-            mobilityPoints = filteredPoints,
+            mobilityPoints = finalFilteredPoints,
             selectedFilter = selectedFilter.type,
+            searchQuery = searchQuery,
             isLoading = isLoading,
             errorMessage = errorMessage,
             userLocation = userLocation
@@ -67,6 +84,10 @@ class MapViewModel(
                 _isLoading.value = false
             }
         }
+    }
+
+    fun onSearchQueryChange(query: String) { // Function to update search query
+        _searchQuery.value = query
     }
 
     fun setSelectedFilter(filter: MobilityTypeFilter) {

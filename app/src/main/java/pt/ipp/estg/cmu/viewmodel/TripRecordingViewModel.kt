@@ -42,6 +42,18 @@ class TripRecordingViewModel(
 
     private var timerJob: Job? = null
 
+    // --- City Center Definition ---
+    // Bounding box for Porto city center
+    private val portoCenterBounds = object {
+        private val sw = LatLng(41.14, -8.63) // Southwest corner
+        private val ne = LatLng(41.16, -8.60) // Northeast corner
+
+        fun contains(point: LatLng): Boolean {
+            return point.latitude >= sw.latitude && point.latitude <= ne.latitude &&
+                   point.longitude >= sw.longitude && point.longitude <= ne.longitude
+        }
+    }
+
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
             result.lastLocation?.let { location ->
@@ -110,8 +122,15 @@ class TripRecordingViewModel(
 
             // --- Point Calculation ---
             var points = (currentState.distance / 100).toLong()
-            if (currentState.distance < 5000) { // less than 5km
-                points *= 2 // Double points
+            // Double points for short trips (<5km)
+            if (currentState.distance < 5000) {
+                points *= 2
+            }
+
+            // --- City Center Bonus ---
+            val isInCityCenter = currentState.pathPoints.any { portoCenterBounds.contains(it) }
+            if (isInCityCenter) {
+                points += 50 // Add 50 bonus points
             }
 
             val pathForDb = currentState.pathPoints.map { mapOf("latitude" to it.latitude, "longitude" to it.longitude) }
@@ -129,7 +148,6 @@ class TripRecordingViewModel(
             if (tripResult.isSuccess) {
                 val pointsResult = userProfileRepository.addPointsToCurrentUser(points)
                 if (pointsResult.isSuccess) {
-                    // FIX: Removed redundant refresh call. The repository now handles this automatically.
                     _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
                 } else {
                     _uiState.value = _uiState.value.copy(isSaving = false, errorMessage = "Trip saved, but failed to update points.")
