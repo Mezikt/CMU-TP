@@ -99,8 +99,9 @@ fun MapPage(navController: NavController) {
                     title = point.name,
                     snippet = "Type: ${point.type}",
                     icon = iconBitmap,
-                    onInfoWindowClick = { 
-                        selectedPoint = point 
+                    onClick = { // FIX: Changed from onInfoWindowClick to onClick
+                        selectedPoint = point
+                        false // Return false to also show the info window
                     }
                 )
             }

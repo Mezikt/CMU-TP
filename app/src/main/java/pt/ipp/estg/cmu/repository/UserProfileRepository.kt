@@ -1,11 +1,16 @@
 package pt.ipp.estg.cmu.repository
 
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.toObject
+import com.google.firebase.ktx.Firebase // FIX: Correct import for the Firebase object
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import pt.ipp.estg.cmu.database.UserProfileDao
 import pt.ipp.estg.cmu.database.UserProfileEntity
@@ -13,56 +18,67 @@ import pt.ipp.estg.cmu.database.UserProfileEntity
 class UserProfileRepository(private val userProfileDao: UserProfileDao) {
 
     private val auth = Firebase.auth
+    private val firestore = Firebase.firestore
 
-    // Expõe um Flow com os dados do perfil a partir da base de dados local (Room)
-    val userProfileFlow: Flow<UserProfileEntity?> = auth.currentUser?.uid?.let { userId ->
-        userProfileDao.getUserProfile(userId)
-    } ?: emptyFlow() // Se não houver utilizador, retorna um Flow vazio.
+    // Este flow observa diretamente a base de dados local.
+    val userProfileFlow: Flow<UserProfileEntity?> = userProfileDao.observeUserProfile()
 
+    init {
+        // Ouve ativamente as mudanças de autenticação usando um listener.
+        val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            val firebaseUser = firebaseAuth.currentUser
+            if (firebaseUser != null) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    refreshUserProfile(firebaseUser.uid)
+                }
+            } else {
+                CoroutineScope(Dispatchers.IO).launch {
+                    userProfileDao.deleteUserProfile()
+                }
+            }
+        }
+        auth.addAuthStateListener(authStateListener)
+    }
 
-    // Função para forçar a atualização dos dados a partir da Firestore
-    suspend fun refreshUserProfile() {
-        // --- INÍCIO DA CORREÇÃO ---
-        // Guarda o uid numa variável local para garantir o smart cast.
-        val currentUserId = auth.currentUser?.uid
-        if (currentUserId != null) {
-            // --- FIM DA CORREÇÃO ---
-            try {
-                // Usa a variável local 'currentUserId' em vez da propriedade
-                val document = Firebase.firestore.collection("users").document(currentUserId).get().await()
-                if (document.exists()) {
-                    val profile = UserProfileEntity(
-                        uid = currentUserId, // Usa a variável local
-                        name = document.getString("name") ?: "",
-                        email = document.getString("email") ?: "",
-                        points = document.getLong("points") ?: 0L
-                    )
-                    // Guarda os dados frescos na base de dados local
+    private suspend fun refreshUserProfile(userId: String) {
+        try {
+            val document = firestore.collection("users").document(userId).get().await()
+            if (document.exists()) {
+                val profile = document.toObject<UserProfileEntity>()
+                if (profile != null) {
                     userProfileDao.upsertUserProfile(profile)
                 }
-            } catch (e: Exception) {
-                // Lidar com erros de rede (ex: logar o erro)
-                e.printStackTrace()
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-    /**
-     * Adds points to the current user's profile in Firestore.
-     *
-     * @param points The number of points to add.
-     * @return A Result object indicating success or failure.
-     */
     suspend fun addPointsToCurrentUser(points: Long): Result<Unit> {
         val currentUserId = auth.currentUser?.uid
             ?: return Result.failure(Exception("User not authenticated."))
 
         return try {
-            val userDocRef = Firebase.firestore.collection("users").document(currentUserId)
+            val userDocRef = firestore.collection("users").document(currentUserId)
             userDocRef.update("points", FieldValue.increment(points)).await()
+            refreshUserProfile(currentUserId)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    suspend fun getLeaderboardUsers(limit: Long = 100): List<UserProfileEntity> {
+        return try {
+            val snapshot = firestore.collection("users")
+                .orderBy("points", Query.Direction.DESCENDING)
+                .limit(limit)
+                .get()
+                .await()
+            snapshot.toObjects(UserProfileEntity::class.java)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
         }
     }
 }

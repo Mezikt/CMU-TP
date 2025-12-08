@@ -7,12 +7,14 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserProfileDao {
-    // Upsert = (UP)date + in(SERT). Insere um novo perfil se não existir, ou atualiza um existente.
     @Upsert
     suspend fun upsertUserProfile(profile: UserProfileEntity)
 
-    // Query para ler o perfil de um utilizador específico pelo seu ID.
-    // Retorna um Flow, que permite à UI observar alterações nos dados em tempo real.
-    @Query("SELECT * FROM user_profile WHERE uid = :uid")
-    fun getUserProfile(uid: String): Flow<UserProfileEntity?>
+    // FIX: Renamed to observeUserProfile and simplified to get the single user profile
+    @Query("SELECT * FROM user_profile LIMIT 1")
+    fun observeUserProfile(): Flow<UserProfileEntity?>
+
+    // FIX: Added method to delete the user profile on logout
+    @Query("DELETE FROM user_profile")
+    suspend fun deleteUserProfile()
 }

@@ -47,8 +47,10 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
         composable("trip_recording") {
             TripRecordingPage(onNavigateBack = { navController.navigateUp() })
         }
+        composable("leaderboard") { // Add new destination for the Leaderboard
+            LeaderboardPage(onNavigateBack = { navController.navigateUp() })
+        }
 
-        // Add new destination for the Review Page
         composable(
             route = "review/{pointId}",
             arguments = listOf(navArgument("pointId") { type = NavType.StringType })
