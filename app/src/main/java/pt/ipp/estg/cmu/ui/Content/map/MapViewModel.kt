@@ -12,8 +12,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pt.ipp.estg.cmu.data.MobilityPointRepository
 
-// As classes de estado e filtro foram removidas para evitar redeclaração.
-// Presume-se que estão definidas num ficheiro de modelo de dados (ex: /data/MapModels.kt)
+// FIX: Imports for the centralized data classes from MapState.kt
+import pt.ipp.estg.cmu.ui.Content.map.MapUiState
+import pt.ipp.estg.cmu.ui.Content.map.MobilityTypeFilter
 
 class MapViewModel(
     private val repository: MobilityPointRepository

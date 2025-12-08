@@ -1,22 +1,26 @@
-package pt.ipp.estg.cmu.ui.Content.map
+package pt.ipp.estg.cmu.ui.Content.map // FIX: Corrected package name to match folder structure
 
 import com.google.android.gms.maps.model.LatLng
-import pt.ipp.estg.cmu.ui.Content.MobilityPoint // Importa sua data class MobilityPoint
+import pt.ipp.estg.cmu.data.MobilityPoint
 
+/**
+ * Represents the state of the Map screen. This is the single source of truth.
+ */
 data class MapUiState(
     val mobilityPoints: List<MobilityPoint> = emptyList(),
-    val selectedFilter: String? = null, // "scooter", "bike", "bus", null (para todos)
+    val selectedFilter: String? = MobilityTypeFilter.ALL.type,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val userLocation: LatLng? = null // Para centralizar o mapa na localização do usuário
+    val userLocation: LatLng? = null
 )
 
-// Você pode criar uma enum para os tipos de filtro, o que é mais seguro
+/**
+ * Enum representing the available filters for mobility points. This is the single source of truth.
+ */
 enum class MobilityTypeFilter(val type: String?) {
-    ALL(null),
+    ALL(null), // A null type represents all points
     SCOOTER("scooter"),
-    BIKE("bike"),
-    BUS("bus"); // Exemplo, se você adicionar autocarros
+    BIKE("bike");
 
     companion object {
         fun fromType(type: String?): MobilityTypeFilter {

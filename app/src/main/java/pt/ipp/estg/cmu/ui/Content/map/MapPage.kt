@@ -1,4 +1,4 @@
-package pt.ipp.estg.cmu.ui.Content
+package pt.ipp.estg.cmu.ui.Content.map
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -6,9 +6,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -24,18 +23,26 @@ import com.google.firebase.ktx.Firebase
 import com.google.maps.android.compose.*
 import pt.ipp.estg.cmu.R
 import pt.ipp.estg.cmu.bitmapDescriptorFromVector
+import pt.ipp.estg.cmu.data.MobilityPoint // Correct model
 import pt.ipp.estg.cmu.data.MobilityPointRepository
+
+// FIX: Explicit imports to resolve reference errors
 import pt.ipp.estg.cmu.ui.Content.map.MapViewModel
 import pt.ipp.estg.cmu.ui.Content.map.MobilityTypeFilter
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("MissingPermission")
 @Composable
-fun MapPage() {
+fun MapPage(navController: NavController) {
     val context = LocalContext.current
 
     val repository = remember { MobilityPointRepository(Firebase.firestore) }
     val mapViewModel: MapViewModel = viewModel(factory = MapViewModel.Factory(repository))
     val uiState by mapViewModel.uiState.collectAsState()
+
+    // --- State for Bottom Sheet ---
+    var selectedPoint by remember { mutableStateOf<MobilityPoint?>(null) }
+    val sheetState = rememberModalBottomSheetState()
 
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -91,8 +98,37 @@ fun MapPage() {
                     state = MarkerState(position = point.location),
                     title = point.name,
                     snippet = "Type: ${point.type}",
-                    icon = iconBitmap
+                    icon = iconBitmap,
+                    onInfoWindowClick = { 
+                        selectedPoint = point 
+                    }
                 )
+            }
+        }
+
+        // Show the Bottom Sheet when a point is selected
+        if (selectedPoint != null) {
+            ModalBottomSheet(
+                onDismissRequest = { selectedPoint = null },
+                sheetState = sheetState
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(selectedPoint!!.name, style = MaterialTheme.typography.headlineSmall)
+                    Text("Type: ${selectedPoint!!.type}", style = MaterialTheme.typography.bodyLarge)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { 
+                            navController.navigate("review/${selectedPoint!!.id}")
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Avaliar Local")
+                    }
+                }
             }
         }
 
@@ -130,7 +166,7 @@ fun MapPage() {
 
 @Composable
 private fun FilterButtons(
-    selectedFilter: String?, // <-- CORREÇÃO APLICADA AQUI
+    selectedFilter: String?,
     onFilterSelected: (MobilityTypeFilter) -> Unit
 ) {
     Row(

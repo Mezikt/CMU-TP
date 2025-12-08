@@ -1,21 +1,15 @@
 package pt.ipp.estg.cmu
 
-
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import pt.ipp.estg.cmu.ui.Content.FriendsPage
-import pt.ipp.estg.cmu.ui.Content.HistoryPage
-import pt.ipp.estg.cmu.ui.Content.HomePage
-import pt.ipp.estg.cmu.ui.Content.PerfilPage
-import pt.ipp.estg.cmu.ui.Content.SettingsPage
-import pt.ipp.estg.cmu.ui.Content.MapPage
-import pt.ipp.estg.cmu.ui.Content.ChangePasswordPage
-import pt.ipp.estg.cmu.ui.Content.TripRecordingPage
-
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import pt.ipp.estg.cmu.ui.Content.* // Import all content pages
+import pt.ipp.estg.cmu.ui.Content.map.MapPage // FIX: Import from the correct path
 
 fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
     navigation(
@@ -23,49 +17,45 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
         route = "main"
     ) {
         composable("home") {
-            HomePage(navController = navController) // Pass navController
+            HomePage(navController = navController)
         }
         composable("map"){
-            MapPage()
+            MapPage(navController = navController) // Pass NavController
         }
         composable("perfil") {
-
             PerfilPage(
                 onLogout = {
                     Firebase.auth.signOut()
-
-                    navController.navigate("auth") {
-                        popUpTo("main") { inclusive = true }
-                    }
+                    navController.navigate("auth") { popUpTo("main") { inclusive = true } }
                 },
                 onNavigateToHistory = { navController.navigate("history") },
                 onNavigateToFriends = { navController.navigate("friends") }
-
             )
         }
         composable("definições") {
             SettingsPage(toChangePassword = { navController.navigate("changePassword") })
         }
-
         composable("friends"){
-            FriendsPage(
-                onNavigateBack = { navController.navigateUp() }
-            )
+            FriendsPage(onNavigateBack = { navController.navigateUp() })
         }
-
         composable("history"){
-            HistoryPage(
-                onNavigateBack = { navController.navigateUp() }
-            )
+            HistoryPage(onNavigateBack = { navController.navigateUp() })
+        }
+        composable("changePassword"){
+            ChangePasswordPage(onNavigateBack = { navController.navigateUp() })
+        }
+        composable("trip_recording") {
+            TripRecordingPage(onNavigateBack = { navController.navigateUp() })
         }
 
-        composable("changePassword"){
-            ChangePasswordPage(
-                onNavigateBack = { navController.navigateUp() }
-            )
-        }
-        composable("trip_recording") { // Add new destination
-            TripRecordingPage(
+        // Add new destination for the Review Page
+        composable(
+            route = "review/{pointId}",
+            arguments = listOf(navArgument("pointId") { type = NavType.StringType })
+        ) {
+            val pointId = it.arguments?.getString("pointId") ?: ""
+            ReviewPage(
+                pointId = pointId,
                 onNavigateBack = { navController.navigateUp() }
             )
         }

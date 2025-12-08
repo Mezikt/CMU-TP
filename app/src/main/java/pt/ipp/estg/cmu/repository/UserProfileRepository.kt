@@ -2,6 +2,7 @@ package pt.ipp.estg.cmu.repository
 
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -43,6 +44,25 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
                 // Lidar com erros de rede (ex: logar o erro)
                 e.printStackTrace()
             }
+        }
+    }
+
+    /**
+     * Adds points to the current user's profile in Firestore.
+     *
+     * @param points The number of points to add.
+     * @return A Result object indicating success or failure.
+     */
+    suspend fun addPointsToCurrentUser(points: Long): Result<Unit> {
+        val currentUserId = auth.currentUser?.uid
+            ?: return Result.failure(Exception("User not authenticated."))
+
+        return try {
+            val userDocRef = Firebase.firestore.collection("users").document(currentUserId)
+            userDocRef.update("points", FieldValue.increment(points)).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }
