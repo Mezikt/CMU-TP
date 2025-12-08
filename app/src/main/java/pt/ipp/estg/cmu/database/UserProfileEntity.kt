@@ -5,9 +5,8 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "user_profile")
 data class UserProfileEntity(
-    @PrimaryKey
-    val uid: String, // ID do utilizador, será a nossa chave primária
-    val name: String,
-    val email: String,
-    val points: Long
+    @PrimaryKey val uid: String = "",
+    val name: String = "",
+    val email: String = "",
+    val points: Long = 0L
 )
