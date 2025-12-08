@@ -10,29 +10,43 @@ import kotlinx.coroutines.launch
 import pt.ipp.estg.cmu.database.UserProfileEntity
 import pt.ipp.estg.cmu.repository.UserProfileRepository
 
+enum class LeaderboardFilter { GLOBAL, FRIENDS }
+
 data class LeaderboardUiState(
     val users: List<UserProfileEntity> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val selectedFilter: LeaderboardFilter = LeaderboardFilter.GLOBAL
 )
 
-class LeaderboardViewModel(private val userRepository: UserProfileRepository) : ViewModel() {
+class LeaderboardViewModel(private val repository: UserProfileRepository) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LeaderboardUiState())
     val uiState: StateFlow<LeaderboardUiState> = _uiState.asStateFlow()
 
     init {
-        fetchLeaderboard()
+        loadLeaderboard()
     }
 
-    fun fetchLeaderboard() {
+    fun onFilterChanged(filter: LeaderboardFilter) {
+        _uiState.value = _uiState.value.copy(selectedFilter = filter)
+        loadLeaderboard()
+    }
+
+    private fun loadLeaderboard() {
         viewModelScope.launch {
-            _uiState.value = LeaderboardUiState(isLoading = true)
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             try {
-                val users = userRepository.getLeaderboardUsers()
-                _uiState.value = LeaderboardUiState(users = users)
+                val users = when (_uiState.value.selectedFilter) {
+                    LeaderboardFilter.GLOBAL -> repository.getLeaderboardUsers()
+                    LeaderboardFilter.FRIENDS -> repository.getCurrentUserFriends()
+                }
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    users = users.sortedByDescending { it.points } // Always sort by points
+                )
             } catch (e: Exception) {
-                _uiState.value = LeaderboardUiState(errorMessage = "Failed to load leaderboard: ${e.message}")
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)
             }
         }
     }

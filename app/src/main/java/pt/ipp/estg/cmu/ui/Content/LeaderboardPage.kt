@@ -20,6 +20,7 @@ import com.google.firebase.ktx.Firebase
 import pt.ipp.estg.cmu.database.AppDatabase
 import pt.ipp.estg.cmu.database.UserProfileEntity
 import pt.ipp.estg.cmu.repository.UserProfileRepository
+import pt.ipp.estg.cmu.viewmodel.LeaderboardFilter
 import pt.ipp.estg.cmu.viewmodel.LeaderboardViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,7 +30,7 @@ fun LeaderboardPage(onNavigateBack: () -> Unit) {
     val repository = remember { UserProfileRepository(AppDatabase.getDatabase(context).userProfileDao()) }
     val leaderboardViewModel: LeaderboardViewModel = viewModel(factory = LeaderboardViewModel.Factory(repository))
     val uiState by leaderboardViewModel.uiState.collectAsState()
-    
+
     val currentUserId = Firebase.auth.currentUser?.uid
 
     Scaffold(
@@ -44,19 +45,49 @@ fun LeaderboardPage(onNavigateBack: () -> Unit) {
             )
         }
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
+                .padding(horizontal = 16.dp)
         ) {
+            // Filter Buttons
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                FilterButton(
+                    text = "Global",
+                    isSelected = uiState.selectedFilter == LeaderboardFilter.GLOBAL,
+                    onClick = { leaderboardViewModel.onFilterChanged(LeaderboardFilter.GLOBAL) }
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                FilterButton(
+                    text = "Friends",
+                    isSelected = uiState.selectedFilter == LeaderboardFilter.FRIENDS,
+                    onClick = { leaderboardViewModel.onFilterChanged(LeaderboardFilter.FRIENDS) }
+                )
+            }
+
             if (uiState.isLoading) {
-                CircularProgressIndicator()
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             } else if (uiState.errorMessage != null) {
-                Text(text = uiState.errorMessage!!)
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                     Text(text = uiState.errorMessage!!)
+                }
             } else if (uiState.users.isEmpty()) {
-                Text("The leaderboard is currently empty.")
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    val message = if (uiState.selectedFilter == LeaderboardFilter.FRIENDS) {
+                        "You have no friends on the leaderboard yet!"
+                    } else {
+                        "The leaderboard is currently empty."
+                    }
+                    Text(message)
+                }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     itemsIndexed(uiState.users) { index, user ->
@@ -66,6 +97,24 @@ fun LeaderboardPage(onNavigateBack: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun FilterButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
+    val colors = if (isSelected) {
+        ButtonDefaults.buttonColors()
+    } else {
+        ButtonDefaults.outlinedButtonColors()
+    }
+    val border = if (isSelected) null else ButtonDefaults.outlinedButtonBorder
+
+    Button(
+        onClick = onClick,
+        colors = colors,
+        border = border
+    ) {
+        Text(text)
     }
 }
 

@@ -5,24 +5,18 @@ import androidx.room.Ignore
 import androidx.room.PrimaryKey
 
 /**
- * Represents a user profile, designed to be compatible with both Room and Firestore.
- *
- * The primary constructor contains only the fields persisted in the local Room database.
- * These fields are `var` to allow Room's code generator (KSP) to create the necessary setters,
- * resolving the "Cannot find setter for field" build error.
- *
- * Firestore-specific fields (e.g., `friends`) are declared outside the primary constructor and
- * marked with `@Ignore`. This prevents Room from trying to persist them, while Firestore can
- * still access and populate them as public properties.
+ * Represents a user profile as a regular class to resolve KSP build issues with data classes.
+ * Using a plain class with `var` properties provides explicit setters that Room's code generator
+ * can reliably work with, fixing the "Cannot find setter for field" error.
  */
 @Entity(tableName = "user_profile")
-data class UserProfileEntity(
+class UserProfileEntity {
     @PrimaryKey
-    var uid: String = "",
-    var name: String = "",
-    var email: String = "",
+    var uid: String = ""
+    var name: String = ""
+    var email: String = ""
     var points: Long = 0L
-) {
+
     @Ignore
     var friends: List<String> = emptyList()
     @Ignore

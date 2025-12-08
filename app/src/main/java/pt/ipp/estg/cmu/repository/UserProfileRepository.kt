@@ -1,10 +1,9 @@
 package pt.ipp.estg.cmu.repository
 
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
@@ -26,9 +25,8 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
         return try {
             val document = usersCollection.document(userId).get().await()
             if (document.exists()) {
-                document.toObject<UserProfileEntity>()?.let {
-                    userProfileDao.upsertUserProfile(it)
-                }
+                val profile = documentToUserProfile(document)
+                userProfileDao.upsertUserProfile(profile)
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("User document does not exist in Firestore."))
@@ -54,12 +52,13 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
 
     suspend fun getLeaderboardUsers(limit: Long = 100): List<UserProfileEntity> {
         return try {
+            // FIX: Removed .orderBy("points") to avoid needing a specific Firestore index.
+            // The sorting is now handled client-side in the ViewModel, which is more robust.
             val snapshot = usersCollection
-                .orderBy("points", Query.Direction.DESCENDING)
                 .limit(limit)
                 .get()
                 .await()
-            snapshot.toObjects(UserProfileEntity::class.java)
+            snapshot.documents.map { documentToUserProfile(it) }
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
@@ -75,13 +74,13 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
     suspend fun searchUsers(query: String): List<UserProfileEntity> {
         val currentUserId = auth.currentUser?.uid ?: return emptyList()
 
-        // Search by name (you can expand this to email)
         val nameQuery = usersCollection
             .whereGreaterThanOrEqualTo("name", query)
             .whereLessThanOrEqualTo("name", query + '\uf8ff')
             .get().await()
 
-        return nameQuery.toObjects(UserProfileEntity::class.java)
+        return nameQuery.documents
+            .map { documentToUserProfile(it) }
             .filter { it.uid != currentUserId } // Exclude current user
     }
 
@@ -101,11 +100,9 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
         val currentUserId = auth.currentUser?.uid ?: return Result.failure(Exception("User not signed in"))
 
         return try {
-            // Add to friends list for both users
             usersCollection.document(currentUserId).update("friends", FieldValue.arrayUnion(friendId)).await()
             usersCollection.document(friendId).update("friends", FieldValue.arrayUnion(currentUserId)).await()
 
-            // Remove from requests
             usersCollection.document(currentUserId).update("friendRequestsReceived", FieldValue.arrayRemove(friendId)).await()
             usersCollection.document(friendId).update("friendRequestsSent", FieldValue.arrayRemove(currentUserId)).await()
 
@@ -131,30 +128,42 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
         val currentUser = getCurrentUserDocument() ?: return emptyList()
         val friendIds = currentUser.friends
 
-        return if (friendIds.isNotEmpty()) {
-            usersCollection.whereIn("uid", friendIds).get().await().toObjects(UserProfileEntity::class.java)
-        } else {
-            emptyList()
-        }
+        if (friendIds.isEmpty()) return emptyList()
+
+        val friendsQuery = usersCollection.whereIn("uid", friendIds).get().await()
+        return friendsQuery.documents.map { documentToUserProfile(it) }
     }
 
     suspend fun getFriendRequests(): List<UserProfileEntity> {
         val currentUser = getCurrentUserDocument() ?: return emptyList()
         val requestIds = currentUser.friendRequestsReceived
 
-        return if (requestIds.isNotEmpty()) {
-            usersCollection.whereIn("uid", requestIds).get().await().toObjects(UserProfileEntity::class.java)
-        } else {
-            emptyList()
-        }
+        if (requestIds.isEmpty()) return emptyList()
+
+        val requestsQuery = usersCollection.whereIn("uid", requestIds).get().await()
+        return requestsQuery.documents.map { documentToUserProfile(it) }
     }
 
     private suspend fun getCurrentUserDocument(): UserProfileEntity? {
         val userId = auth.currentUser?.uid ?: return null
         return try {
-            usersCollection.document(userId).get().await().toObject(UserProfileEntity::class.java)
+            usersCollection.document(userId).get().await().let { document ->
+                if (document.exists()) documentToUserProfile(document) else null
+            }
         } catch (e: Exception) {
             null
+        }
+    }
+
+    private fun documentToUserProfile(document: DocumentSnapshot): UserProfileEntity {
+        return UserProfileEntity().apply {
+            uid = document.id
+            name = document.getString("name") ?: ""
+            email = document.getString("email") ?: ""
+            points = document.getLong("points") ?: 0L
+            friends = document.get("friends") as? List<String> ?: emptyList()
+            friendRequestsReceived = document.get("friendRequestsReceived") as? List<String> ?: emptyList()
+            friendRequestsSent = document.get("friendRequestsSent") as? List<String> ?: emptyList()
         }
     }
 }
