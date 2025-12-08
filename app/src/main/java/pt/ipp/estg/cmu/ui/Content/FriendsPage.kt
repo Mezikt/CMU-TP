@@ -43,7 +43,7 @@ private fun ButtonBack(
         modifier = modifier.padding(8.dp)
     ) {
         Icon(
-            imageVector = Icons.Default.ArrowBack,
+            imageVector = Icons.Filled.ArrowBack,
             contentDescription = "Voltar"
         )
     }

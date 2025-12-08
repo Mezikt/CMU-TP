@@ -6,30 +6,34 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import pt.ipp.estg.cmu.viewmodel.ChangePasswordViewModel
 
 @Composable
 fun ChangePasswordPage(
     onNavigateBack: () -> Unit,
 ) {
+    val changePasswordViewModel: ChangePasswordViewModel = viewModel()
+    val uiState by changePasswordViewModel.uiState.collectAsState()
+
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+
+    LaunchedEffect(uiState) {
+        if (uiState.success) {
+            onNavigateBack()
+        }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -47,6 +51,7 @@ fun ChangePasswordPage(
         ) {
             Text(
                 text = "Troca de Palavra-Passe",
+                style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
             OutlinedTextField(
@@ -56,7 +61,8 @@ fun ChangePasswordPage(
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
+                    .padding(bottom = 8.dp),
+                isError = uiState.error != null
             )
             OutlinedTextField(
                 value = newPassword,
@@ -65,7 +71,8 @@ fun ChangePasswordPage(
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
+                    .padding(bottom = 8.dp),
+                isError = uiState.error != null
             )
             OutlinedTextField(
                 value = confirmPassword,
@@ -74,13 +81,34 @@ fun ChangePasswordPage(
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 16.dp),
+                isError = uiState.error != null
             )
+
             Button(
-                onClick = { /* TODO: Handle password change */ },
+                onClick = {
+                    changePasswordViewModel.changePassword(
+                        currentPassword,
+                        newPassword,
+                        confirmPassword
+                    )
+                },
+                enabled = !uiState.isLoading,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Trocar Palavra-passe")
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                } else {
+                    Text("Trocar Palavra-passe")
+                }
+            }
+
+            uiState.error?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         }
     }

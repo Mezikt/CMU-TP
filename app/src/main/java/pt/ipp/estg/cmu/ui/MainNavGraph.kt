@@ -22,8 +22,8 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
         composable("map"){
             MapPage(navController = navController) // Pass NavController
         }
-        composable("perfil") {
-            PerfilPage(
+        composable("profile") {
+            ProfilePage(
                 onLogout = {
                     Firebase.auth.signOut()
                     navController.navigate("auth") { popUpTo("main") { inclusive = true } }
@@ -32,7 +32,7 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
                 onNavigateToFriends = { navController.navigate("friends") }
             )
         }
-        composable("definições") {
+        composable("settings") {
             SettingsPage(toChangePassword = { navController.navigate("changePassword") })
         }
         composable("friends"){

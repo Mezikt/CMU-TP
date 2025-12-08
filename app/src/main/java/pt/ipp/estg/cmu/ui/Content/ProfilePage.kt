@@ -2,8 +2,8 @@ package pt.ipp.estg.cmu.ui.Content
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.ListAlt
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,7 +20,7 @@ import com.google.firebase.ktx.Firebase
 import pt.ipp.estg.cmu.viewmodel.ProfileViewModel
 
 @Composable
-fun PerfilPage(
+fun ProfilePage(
     onLogout: () -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToFriends: () -> Unit,
@@ -117,14 +117,14 @@ private fun ProfileContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        ProfileMenuItem(icon = Icons.Default.ListAlt, text = "Histórico de Viagens", onClick = onNavigateToHistory)
+        ProfileMenuItem(icon = Icons.Filled.History, text = "Histórico de Viagens", onClick = onNavigateToHistory)
         Divider()
-        ProfileMenuItem(icon = Icons.Default.People, text = "Amigos", onClick = onNavigateToFriends)
+        ProfileMenuItem(icon = Icons.Filled.People, text = "Amigos", onClick = onNavigateToFriends)
 
         Spacer(modifier = Modifier.weight(1f)) 
 
         OutlinedButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Default.ExitToApp, contentDescription = "Logout Icon", modifier = Modifier.size(18.dp))
+            Icon(Icons.Filled.Logout, contentDescription = "Logout Icon", modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Text("Logout")
         }
