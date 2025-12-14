@@ -1,5 +1,6 @@
 package pt.ipp.estg.cmu.ui.Content
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -31,6 +32,81 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
     val viewModel: FriendsViewModel = viewModel(factory = FriendsViewModel.Factory(repository))
     val uiState by viewModel.uiState.collectAsState()
 
+    var friendAdd by remember { mutableStateOf("") }
+    var showAddFriendDialog by remember { mutableStateOf(false) }
+    var showRequestsDialog by remember { mutableStateOf(false) }
+
+    // Dialog para adicionar amigo por Email (Input Manual)
+    if (showAddFriendDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddFriendDialog = false },
+            title = { Text("Add Friend by Email") },
+            text = {
+                OutlinedTextField(
+                    value = friendAdd,
+                    onValueChange = { friendAdd = it },
+                    label = { Text("Email") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        // AQUI: Dependendo de como o teu ViewModel foi feito,
+                        // ele pode aceitar email ou precisar de procurar o UID primeiro.
+                        // Assumindo que o teu colega tratou disto no ViewModel:
+                        viewModel.sendFriendRequest(friendAdd)
+                        showAddFriendDialog = false
+                        friendAdd = ""
+                    }
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = {
+                        showAddFriendDialog = false
+                        friendAdd = ""
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Dialog para ver e Aceitar/Recusar Pedidos
+    if (showRequestsDialog) {
+        AlertDialog(
+            onDismissRequest = { showRequestsDialog = false },
+            title = { Text("Friend Requests") },
+            text = {
+                if (uiState.friendRequests.isEmpty()) {
+                    Text("You have no pending friend requests.", modifier = Modifier.padding(16.dp))
+                } else {
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        items(uiState.friendRequests) { user ->
+                            FriendRequestItem(
+                                user = user,
+                                // CORREÇÃO AQUI: Usar user.uid em vez de user.email
+                                onAccept = { viewModel.acceptFriendRequest(user.uid) },
+                                onDecline = { viewModel.declineFriendRequest(user.uid) }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showRequestsDialog = false }
+                ) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -38,6 +114,11 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showAddFriendDialog = true }) {
+                        Icon(Icons.Filled.PersonAdd, contentDescription = "Add new friend")
                     }
                 }
             )
@@ -59,44 +140,44 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
                 Text(uiState.errorMessage!!, color = MaterialTheme.colorScheme.error)
             }
 
-            // Search Bar
+            // Barra de Pesquisa
             OutlinedTextField(
                 value = uiState.searchQuery,
                 onValueChange = { viewModel.onSearchQueryChanged(it) },
-                label = { Text("Search for new friends by name") },
+                label = { Text("Search for friends by name") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             )
 
             LazyColumn {
-                // Search Results
+                // Resultados da Pesquisa
                 if (uiState.searchResults.isNotEmpty()) {
                     item { SectionTitle(title = "Search Results") }
-                    items(uiState.searchResults) {
-                        UserSearchResultItem(user = it, onAddFriend = { viewModel.sendFriendRequest(it.uid) })
+                    items(uiState.searchResults) { user ->
+                        // Aqui já estava correto (usava o UID), mantivemos.
+                        UserSearchResultItem(user = user, onAddFriend = { viewModel.sendFriendRequest(user.uid) })
                     }
                 }
 
-                // Friend Requests
+                // Botão para ver Pedidos (Se existirem)
                 if (uiState.friendRequests.isNotEmpty()) {
-                    item { SectionTitle(title = "Friend Requests") }
-                    items(uiState.friendRequests) {
-                        FriendRequestItem(
-                            user = it,
-                            onAccept = { viewModel.acceptFriendRequest(it.uid) },
-                            onDecline = { viewModel.declineFriendRequest(it.uid) }
-                        )
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().padding(vertical=8.dp), contentAlignment = Alignment.Center) {
+                            Button(onClick = { showRequestsDialog = true }) {
+                                Text("View Friend Requests (${uiState.friendRequests.size})")
+                            }
+                        }
                     }
                 }
 
-                // Friends List
+                // Lista de Amigos
                 item { SectionTitle(title = "Your Friends") }
                 if (uiState.friends.isEmpty()) {
                     item { Text("You have no friends yet. Add some!") }
                 } else {
-                    items(uiState.friends) {
-                        FriendItem(user = it)
+                    items(uiState.friends) { user ->
+                        FriendItem(user = user)
                     }
                 }
             }
@@ -116,7 +197,11 @@ private fun SectionTitle(title: String) {
 
 @Composable
 private fun UserSearchResultItem(user: UserProfileEntity, onAddFriend: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -135,18 +220,22 @@ private fun UserSearchResultItem(user: UserProfileEntity, onAddFriend: () -> Uni
 
 @Composable
 private fun FriendRequestItem(user: UserProfileEntity, onAccept: () -> Unit, onDecline: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(user.name, fontWeight = FontWeight.Bold)
+                Text(user.email, fontWeight = FontWeight.Bold)
                 Text("Wants to be your friend", style = MaterialTheme.typography.bodySmall)
             }
             Row {
-                IconButton(onClick = onAccept) {
+                IconButton(onClick = onAccept){
                     Icon(Icons.Default.Check, contentDescription = "Accept", tint = Color(0xFF4CAF50))
                 }
                 IconButton(onClick = onDecline) {
@@ -159,7 +248,11 @@ private fun FriendRequestItem(user: UserProfileEntity, onAccept: () -> Unit, onD
 
 @Composable
 private fun FriendItem(user: UserProfileEntity) {
-    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
