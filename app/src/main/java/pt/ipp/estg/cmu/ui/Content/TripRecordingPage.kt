@@ -46,7 +46,7 @@ import pt.ipp.estg.cmu.viewmodel.TripRecordingViewModel
 @Composable
 fun TripRecordingPage(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
-    val application = context.applicationContext as android.app.Application // <-- NOVO
+    val application = context.applicationContext as android.app.Application 
 
     val tripRepository = remember { TripRepository(Firebase.firestore) }
     val userProfileRepository = remember { UserProfileRepository(AppDatabase.getDatabase(context).userProfileDao())}

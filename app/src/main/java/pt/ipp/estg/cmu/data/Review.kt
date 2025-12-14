@@ -18,5 +18,5 @@ data class Review(
     var rating: Int = 0,
     var comment: String = "",
     @ServerTimestamp
-    var date: Timestamp? = null // Firestore will automatically set this
+    var date: Timestamp? = null
 )

@@ -37,7 +37,6 @@ import pt.ipp.estg.cmu.data.ReviewRepository
 fun MapPage(navController: NavController) {
     val context = LocalContext.current
 
-    // --- Repositories and ViewModel --- 
     val mobilityPointRepository = remember { MobilityPointRepository(Firebase.firestore) }
     val reviewRepository = remember { ReviewRepository(Firebase.firestore) }
     val mapViewModel: MapViewModel = viewModel(
@@ -45,7 +44,7 @@ fun MapPage(navController: NavController) {
     )
     val uiState by mapViewModel.uiState.collectAsState()
 
-    // --- Location Permission --- 
+
     var hasLocationPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
@@ -63,7 +62,6 @@ fun MapPage(navController: NavController) {
         }
     }
 
-    // --- Map and Camera State --- 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(41.1579, -8.6291), 12f)
     }
@@ -78,7 +76,6 @@ fun MapPage(navController: NavController) {
         }
     }
 
-    // --- UI --- 
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
@@ -99,7 +96,6 @@ fun MapPage(navController: NavController) {
             }
         }
 
-        // --- Bottom Sheet for Selected Point --- 
         uiState.selectedPointInfo?.let {
             val sheetState = rememberModalBottomSheetState()
             ModalBottomSheet(
@@ -113,7 +109,6 @@ fun MapPage(navController: NavController) {
             }
         }
 
-        // --- Search and Filter UI --- 
         Column(
             modifier = Modifier.align(Alignment.TopCenter).padding(16.dp)
         ) {
@@ -130,7 +125,6 @@ fun MapPage(navController: NavController) {
             )
         }
 
-        // --- Loading/Error Indicators --- 
         if (uiState.isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         }
@@ -178,7 +172,7 @@ private fun RatingBar(rating: Float, maxRating: Int = 5) {
                 imageVector = icon,
                 contentDescription = null,
                 tint = tint,
-                modifier = Modifier.size(24.dp) // Smaller stars for display
+                modifier = Modifier.size(24.dp)
             )
         }
     }

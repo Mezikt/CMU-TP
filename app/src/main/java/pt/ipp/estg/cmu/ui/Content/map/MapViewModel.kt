@@ -26,8 +26,6 @@ class MapViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     private val _selectedPointInfo = MutableStateFlow<SelectedPointInfo?>(null)
 
-    // FIX: Restructured combine to handle 7 flows by chaining them.
-    // The combine function can only take a maximum of 6 flows at a time.
     val uiState: StateFlow<MapUiState> = combine(
         mobilityPointRepository.mobilityPoints,
         _selectedFilter,
@@ -35,7 +33,7 @@ class MapViewModel(
         _isLoading,
         _errorMessage
     ) { points, filter, query, loading, error ->
-        // Create an intermediate object to hold the first 5 values
+
         object {
             val points = points
             val filter = filter
@@ -44,11 +42,11 @@ class MapViewModel(
             val error = error
         }
     }.combine(_userLocation) { intermediate, location ->
-        object { // Create another intermediate object
+        object {
             val intermediate = intermediate
             val location = location
         }
-    }.combine(_selectedPointInfo) { intermediateWithLocation, selectedInfo -> // Combine with the 7th flow
+    }.combine(_selectedPointInfo) { intermediateWithLocation, selectedInfo ->
         val intermediate = intermediateWithLocation.intermediate
         val location = intermediateWithLocation.location
 

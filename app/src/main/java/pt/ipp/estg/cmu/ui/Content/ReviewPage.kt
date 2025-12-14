@@ -108,7 +108,7 @@ fun ReviewPage(
                         reviewViewModel.submitReview(pointId, rating, comment)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isLoading // Disable button while loading
+                    enabled = !uiState.isLoading
                 ) {
                     Text(stringResource(R.string.btn_submit_review))
                 }

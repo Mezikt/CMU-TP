@@ -10,11 +10,9 @@ interface UserProfileDao {
     @Upsert
     suspend fun upsertUserProfile(profile: UserProfileEntity)
 
-    // FIX: Renamed to observeUserProfile and simplified to get the single user profile
     @Query("SELECT * FROM user_profile LIMIT 1")
     fun observeUserProfile(): Flow<UserProfileEntity?>
 
-    // FIX: Added method to delete the user profile on logout
     @Query("DELETE FROM user_profile")
     suspend fun deleteUserProfile()
 }

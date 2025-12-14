@@ -36,7 +36,7 @@ fun NavGraphBuilder.authNavGraph(navController: NavHostController) {
                     }
                 },
                 onBackToLogin = {
-                    navController.popBackStack() // Volta para o ecrã de login
+                    navController.popBackStack()
                 }
             )
         }

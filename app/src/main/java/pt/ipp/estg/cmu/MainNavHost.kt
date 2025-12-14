@@ -16,7 +16,6 @@ fun MainNavHost() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // FIX: Updated routes to English for consistency
     val showBottomBar = currentRoute in listOf("home", "map", "profile", "settings")
 
     Scaffold(
@@ -28,7 +27,7 @@ fun MainNavHost() {
     ) {
         NavHost(
             navController = navController,
-            startDestination = "auth", // Start with authentication
+            startDestination = "auth",
             modifier = Modifier.padding(it)
         ) {
             authNavGraph(navController)

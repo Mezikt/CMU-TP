@@ -20,7 +20,7 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
             HomePage(navController = navController)
         }
         composable("map"){
-            MapPage(navController = navController) // Pass NavController
+            MapPage(navController = navController)
         }
         composable("profile") {
             ProfilePage(

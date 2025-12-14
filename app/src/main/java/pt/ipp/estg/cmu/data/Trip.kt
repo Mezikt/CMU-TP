@@ -20,6 +20,6 @@ data class Trip(
     val duration: Long = 0L,
     val path: List<Map<String, Double>> = emptyList(),
     @ServerTimestamp
-    val date: Timestamp? = null, // Firestore will automatically set this on the server
+    val date: Timestamp? = null,
     val points: Int = 0
 )

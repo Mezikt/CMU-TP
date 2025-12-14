@@ -14,7 +14,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     private val repository: UserProfileRepository
 
-    // Expose a separate state for error messages
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage = _errorMessage.asStateFlow()
 

@@ -57,7 +57,6 @@ fun UserListRow(
                     placeholder = rememberVectorPainter(Icons.Default.Person)
                 )
             } else {
-                // Se não tiver link
                 Box(
                     modifier = Modifier
                         .size(50.dp)

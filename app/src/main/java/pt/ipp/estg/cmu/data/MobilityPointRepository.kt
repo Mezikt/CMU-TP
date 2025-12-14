@@ -12,9 +12,7 @@ import kotlinx.coroutines.tasks.await
  */
 class MobilityPointRepository(private val firestore: FirebaseFirestore) {
 
-    // Private mutable state flow to hold the list of points
     private val _mobilityPoints = MutableStateFlow<List<MobilityPoint>>(emptyList())
-    // Public immutable state flow for the UI to observe
     val mobilityPoints: StateFlow<List<MobilityPoint>> = _mobilityPoints.asStateFlow()
 
     /**
@@ -42,7 +40,6 @@ class MobilityPointRepository(private val firestore: FirebaseFirestore) {
             }
             _mobilityPoints.value = points
         } catch (e: Exception) {
-            // In case of an error, you might want to expose it to the UI
             e.printStackTrace()
         }
     }

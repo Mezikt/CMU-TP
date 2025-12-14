@@ -14,7 +14,7 @@ class TripRepository(private val firestore: FirebaseFirestore) {
      */
     suspend fun saveTrip(trip: Trip): Result<Unit> {
         return try {
-            // "trips" is the name of our collection
+
             firestore.collection("trips").add(trip).await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -36,7 +36,7 @@ class TripRepository(private val firestore: FirebaseFirestore) {
                 .await()
             snapshot.documents.mapNotNull { it.toObject<Trip>() }
         } catch (e: Exception) {
-            emptyList() // Return an empty list in case of an error
+            emptyList()
         }
     }
 }

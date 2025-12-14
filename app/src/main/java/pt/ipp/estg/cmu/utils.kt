@@ -7,7 +7,6 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 
-// Função auxiliar para converter um Vector Drawable (XML) num BitmapDescriptor para o mapa
 fun bitmapDescriptorFromVector(
     context: Context,
     vectorResId: Int
