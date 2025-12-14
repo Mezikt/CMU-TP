@@ -1,25 +1,15 @@
 package pt.ipp.estg.cmu.viewmodel
 
-import android.content.ContentValues.TAG
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.tasks.Task
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.QuerySnapshot
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import pt.ipp.estg.cmu.repository.UserProfileRepository
 import pt.ipp.estg.cmu.database.UserProfileEntity
 
-
-// UI State for the Friends Screen
 data class FriendsUiState(
     val friends: List<UserProfileEntity> = emptyList(),
     val searchResults: List<UserProfileEntity> = emptyList(),
@@ -33,8 +23,6 @@ class FriendsViewModel(private val repository: UserProfileRepository) : ViewMode
 
     private val _uiState = MutableStateFlow(FriendsUiState())
     val uiState: StateFlow<FriendsUiState> = _uiState.asStateFlow()
-    val auth = Firebase.auth
-    val db = Firebase.firestore
 
     init {
         loadInitialData()
@@ -42,10 +30,8 @@ class FriendsViewModel(private val repository: UserProfileRepository) : ViewMode
 
     private fun loadInitialData() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true) // Mantém o estado anterior mas mete loading
+            _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                // Assumo que o teu repositório sabe ler desta coleção "friendRequest"
-                // Se isto estiver a devolver lista vazia, o problema está no repositório.
                 val friends = repository.getCurrentUserFriends()
                 val requests = repository.getFriendRequests()
 
@@ -56,7 +42,10 @@ class FriendsViewModel(private val repository: UserProfileRepository) : ViewMode
                     errorMessage = null
                 )
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "Failed to load data: ${e.message}")
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Failed to load data: ${e.message}"
+                )
             }
         }
     }
@@ -65,131 +54,70 @@ class FriendsViewModel(private val repository: UserProfileRepository) : ViewMode
         _uiState.value = _uiState.value.copy(searchQuery = query)
         if (query.length > 2) {
             searchUsers(query)
+        } else if (query.isBlank()) {
+            _uiState.value = _uiState.value.copy(searchResults = emptyList())
         }
     }
 
     private fun searchUsers(query: String) {
-        if (query.isBlank()) {
-            _uiState.value = _uiState.value.copy(searchResults = emptyList())
-            return
-        }
-
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val usersCollection = Firebase.firestore.collection("/friendRequest")
-
-                val searchQuery = usersCollection
-                    .orderBy("name")
-                    .startAt(query)
-                    .endAt(query + '\uf8ff')
-
-                var searchResult = repository.searchUsers(searchQuery)
+                val searchResult = repository.searchUsers(query)
 
                 _uiState.value = _uiState.value.copy(isLoading = false, searchResults = searchResult)
             } catch (e: Exception) {
-                Log.e("TAG", "Error searching users", e)
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)
             }
         }
     }
 
-    fun sendFriendRequest(friendToAdd: String) {
+    fun sendFriendRequest(friendEmail: String) {
         viewModelScope.launch {
-            try {
-                val user = auth.currentUser?.email
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            val result = repository.sendFriendRequest(friendEmail)
 
-                if(user != null){
-                    // Verifica se já não existe um pedido igual antes de enviar
-                    val query = db.collection("/friendRequest")
-                        .whereEqualTo("from", user)
-                        .whereEqualTo("receive", friendToAdd)
-                        .get()
-                        .await()
-
-                    if (query.isEmpty) {
-                        val doc = mapOf(
-                            "from" to user,
-                            "receive" to friendToAdd,
-                            "status" to "pending",
-                        )
-                        db.collection("/friendRequest").add(doc).await()
-                        _uiState.value = _uiState.value.copy(errorMessage = "Friend request sent!")
-                    } else {
-                        _uiState.value = _uiState.value.copy(errorMessage = "Request already sent.")
-                    }
-                } else {
-                    throw Exception("User not authenticated")
-                }
-            } catch (e : Exception){
-                _uiState.value = _uiState.value.copy(errorMessage = e.message)
+            if (result.isSuccess) {
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = null)
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = result.exceptionOrNull()?.message
+                )
             }
         }
     }
 
-
-    fun acceptFriendRequest(userSentEmail: String) {
-        Log.w(TAG, "Attempting to accept request from: $userSentEmail")
+    fun acceptFriendRequest(friendUid: String) {
         viewModelScope.launch {
-            try {
-                val userRecieve = auth.currentUser?.email
+            _uiState.value = _uiState.value.copy(isLoading = true)
 
-                if(userRecieve != null){
+            val result = repository.acceptFriendRequest(friendUid)
 
-                    // Procura o pedido na base de dados
-                    val snapshot = db.collection("/friendRequest")
-                        .whereEqualTo("from", userSentEmail)
-                        .whereEqualTo("receive", userRecieve)
-                        .whereEqualTo("status", "pending") // Garante que só aceita se estiver pendente
-                        .limit(1)
-                        .get()
-                        .await()
-
-                    // --- AQUI ESTAVA O ERRO ---
-                    if (!snapshot.isEmpty) {
-                        // Se encontrou, atualiza
-                        val doc = snapshot.documents[0].reference
-                        doc.update("status", "accepted").await()
-
-                        // Atualiza a lista na UI
-                        loadInitialData()
-                    } else {
-                        // Se não encontrou, avisa (pode ser problema de emails não baterem certo)
-                        Log.e(TAG, "Document not found for $userSentEmail -> $userRecieve")
-                        _uiState.value = _uiState.value.copy(errorMessage = "Request not found (Check emails)")
-                    }
-
-                } else {
-                    throw Exception("User not authenticated")
-                }
-            } catch (e : Exception){
-                Log.e(TAG, "Error accepting", e)
-                _uiState.value = _uiState.value.copy(errorMessage = e.message)
+            if (result.isSuccess) {
+                loadInitialData()
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = result.exceptionOrNull()?.message
+                )
             }
         }
     }
 
-    // --- CORREÇÃO AQUI TAMBÉM ---
-    // O teu código antigo usava repository com ID. Como estamos a usar emails,
-    // temos de fazer a lógica aqui tal como no accept.
-    fun declineFriendRequest(userSentEmail: String) {
+    fun declineFriendRequest(friendUid: String) {
         viewModelScope.launch {
-            try {
-                val userRecieve = auth.currentUser?.email
-                if (userRecieve != null) {
-                    val snapshot = db.collection("/friendRequest")
-                        .whereEqualTo("from", userSentEmail)
-                        .whereEqualTo("receive", userRecieve)
-                        .limit(1)
-                        .get()
-                        .await()
+            _uiState.value = _uiState.value.copy(isLoading = true)
 
-                    if (!snapshot.isEmpty) {
-                        // Ao recusar, normalmente apagamos o pedido ou mudamos para "declined"
-                        snapshot.documents[0].reference.delete().await()
-                        loadInitialData()
-                    }
-                }
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = e.message)
+            val result = repository.declineFriendRequest(friendUid)
+
+            if (result.isSuccess) {
+                loadInitialData()
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = result.exceptionOrNull()?.message
+                )
             }
         }
     }
