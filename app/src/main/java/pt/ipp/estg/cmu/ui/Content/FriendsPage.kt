@@ -36,7 +36,6 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
     var showAddFriendDialog by remember { mutableStateOf(false) }
     var showRequestsDialog by remember { mutableStateOf(false) }
 
-    // Dialog para adicionar amigo por Email (Input Manual)
     if (showAddFriendDialog) {
         AlertDialog(
             onDismissRequest = { showAddFriendDialog = false },
@@ -52,9 +51,6 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
             confirmButton = {
                 Button(
                     onClick = {
-                        // AQUI: Dependendo de como o teu ViewModel foi feito,
-                        // ele pode aceitar email ou precisar de procurar o UID primeiro.
-                        // Assumindo que o teu colega tratou disto no ViewModel:
                         viewModel.sendFriendRequest(friendAdd)
                         showAddFriendDialog = false
                         friendAdd = ""
@@ -76,7 +72,6 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
         )
     }
 
-    // Dialog para ver e Aceitar/Recusar Pedidos
     if (showRequestsDialog) {
         AlertDialog(
             onDismissRequest = { showRequestsDialog = false },
@@ -89,9 +84,8 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
                         items(uiState.friendRequests) { user ->
                             FriendRequestItem(
                                 user = user,
-                                // CORREÇÃO AQUI: Usar user.uid em vez de user.email
-                                onAccept = { viewModel.acceptFriendRequest(user.uid) },
-                                onDecline = { viewModel.declineFriendRequest(user.uid) }
+                                onAccept = { viewModel.acceptFriendRequest(user.email) },
+                                onDecline = { viewModel.declineFriendRequest(user.email) }
                             )
                         }
                     }
@@ -140,7 +134,6 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
                 Text(uiState.errorMessage!!, color = MaterialTheme.colorScheme.error)
             }
 
-            // Barra de Pesquisa
             OutlinedTextField(
                 value = uiState.searchQuery,
                 onValueChange = { viewModel.onSearchQueryChanged(it) },
@@ -151,16 +144,13 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
             )
 
             LazyColumn {
-                // Resultados da Pesquisa
                 if (uiState.searchResults.isNotEmpty()) {
                     item { SectionTitle(title = "Search Results") }
                     items(uiState.searchResults) { user ->
-                        // Aqui já estava correto (usava o UID), mantivemos.
                         UserSearchResultItem(user = user, onAddFriend = { viewModel.sendFriendRequest(user.uid) })
                     }
                 }
 
-                // Botão para ver Pedidos (Se existirem)
                 if (uiState.friendRequests.isNotEmpty()) {
                     item {
                         Box(modifier = Modifier.fillMaxWidth().padding(vertical=8.dp), contentAlignment = Alignment.Center) {
@@ -171,7 +161,6 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
                     }
                 }
 
-                // Lista de Amigos
                 item { SectionTitle(title = "Your Friends") }
                 if (uiState.friends.isEmpty()) {
                     item { Text("You have no friends yet. Add some!") }
@@ -235,7 +224,7 @@ private fun FriendRequestItem(user: UserProfileEntity, onAccept: () -> Unit, onD
                 Text("Wants to be your friend", style = MaterialTheme.typography.bodySmall)
             }
             Row {
-                IconButton(onClick = onAccept){
+                IconButton(onClick =  onAccept){
                     Icon(Icons.Default.Check, contentDescription = "Accept", tint = Color(0xFF4CAF50))
                 }
                 IconButton(onClick = onDecline) {
