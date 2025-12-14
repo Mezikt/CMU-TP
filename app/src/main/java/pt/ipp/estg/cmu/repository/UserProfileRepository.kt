@@ -244,6 +244,7 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
             name = document.getString("name") ?: "Unknown"
             email = document.getString("email") ?: ""
             points = document.getLong("points") ?: 0L
+            photoUrl = document.getString("photoUrl") ?: ""
             friends = emptyList()
             friendRequestsReceived = emptyList()
             friendRequestsSent = emptyList()

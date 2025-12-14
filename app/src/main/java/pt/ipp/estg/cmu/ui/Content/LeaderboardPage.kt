@@ -1,10 +1,14 @@
 package pt.ipp.estg.cmu.ui.Content
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -12,11 +16,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import pt.ipp.estg.cmu.R
@@ -57,7 +65,6 @@ fun LeaderboardPage(onNavigateBack: () -> Unit) {
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
-            // Filter Buttons
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -95,10 +102,16 @@ fun LeaderboardPage(onNavigateBack: () -> Unit) {
                     Text(message)
                 }
             } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LazyColumn(
+                    contentPadding = PaddingValues(bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     itemsIndexed(uiState.users) { index, user ->
-                        val isCurrentUser = user.uid == currentUserId
-                        UserRankItem(rank = index + 1, user = user, isCurrentUser = isCurrentUser)
+                        UserRankItem(
+                            rank = index + 1,
+                            user = user,
+                            isCurrentUser = user.uid == currentUserId
+                        )
                     }
                 }
             }
@@ -129,7 +142,7 @@ private fun UserRankItem(rank: Int, user: UserProfileEntity, isCurrentUser: Bool
     val cardColors = if (isCurrentUser) {
         CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     } else {
-        CardDefaults.cardColors()
+        CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     }
 
     Card(
@@ -139,20 +152,59 @@ private fun UserRankItem(rank: Int, user: UserProfileEntity, isCurrentUser: Bool
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(12.dp)
                 .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("#$rank", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(user.name, style = MaterialTheme.typography.bodyLarge)
-            }
+
             Text(
-                text = "${user.points} ${stringResource(R.string.label_pts)}",
+                text = "#$rank",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.width(40.dp)
+            )
+
+            if (user.photoUrl.isNotEmpty()) {
+                AsyncImage(
+                    model = user.photoUrl,
+                    contentDescription = "Foto de ${user.name}",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color.LightGray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = user.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (isCurrentUser) FontWeight.Bold else FontWeight.Normal
+                )
+            }
+
+            Text(
+                text = "${user.points} pts",
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }

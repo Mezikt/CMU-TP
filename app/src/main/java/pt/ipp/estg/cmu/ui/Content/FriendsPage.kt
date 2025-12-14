@@ -1,28 +1,33 @@
 package pt.ipp.estg.cmu.ui.Content
 
-import android.util.Log
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import pt.ipp.estg.cmu.database.AppDatabase
 import pt.ipp.estg.cmu.database.UserProfileEntity
 import pt.ipp.estg.cmu.repository.UserProfileRepository
 import pt.ipp.estg.cmu.viewmodel.FriendsViewModel
-import pt.ipp.estg.cmu.viewmodel.FriendsUiState
-import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,17 +89,15 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
                         items(uiState.friendRequests) { user ->
                             FriendRequestItem(
                                 user = user,
-                                onAccept = { viewModel.acceptFriendRequest(user.email) },
-                                onDecline = { viewModel.declineFriendRequest(user.email) }
+                                onAccept = { viewModel.acceptFriendRequest(user.uid) },
+                                onDecline = { viewModel.declineFriendRequest(user.uid) }
                             )
                         }
                     }
                 }
             },
             confirmButton = {
-                Button(
-                    onClick = { showRequestsDialog = false }
-                ) {
+                Button(onClick = { showRequestsDialog = false }) {
                     Text("Close")
                 }
             }
@@ -117,21 +120,25 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
                 }
             )
         }
-    ) {
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(it)
+                .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
             if (uiState.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
             }
 
             if (uiState.errorMessage != null) {
-                Text(uiState.errorMessage!!, color = MaterialTheme.colorScheme.error)
+                Text(
+                    text = uiState.errorMessage ?: "",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
             }
 
             OutlinedTextField(
@@ -140,20 +147,38 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
                 label = { Text("Search for friends by name") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = 8.dp),
+                trailingIcon = {
+                    if (uiState.searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                        }
+                    }
+                }
             )
 
-            LazyColumn {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
                 if (uiState.searchResults.isNotEmpty()) {
                     item { SectionTitle(title = "Search Results") }
                     items(uiState.searchResults) { user ->
-                        UserSearchResultItem(user = user, onAddFriend = { viewModel.sendFriendRequest(user.uid) })
+                        UserSearchResultItem(
+                            user = user,
+                            onAddFriend = { viewModel.sendFriendRequest(user.email) }
+                        )
                     }
                 }
 
                 if (uiState.friendRequests.isNotEmpty()) {
                     item {
-                        Box(modifier = Modifier.fillMaxWidth().padding(vertical=8.dp), contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Button(onClick = { showRequestsDialog = true }) {
                                 Text("View Friend Requests (${uiState.friendRequests.size})")
                             }
@@ -162,11 +187,25 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
                 }
 
                 item { SectionTitle(title = "Your Friends") }
+
                 if (uiState.friends.isEmpty()) {
-                    item { Text("You have no friends yet. Add some!") }
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("You have no friends yet. Add some!", color = Color.Gray)
+                        }
+                    }
                 } else {
-                    items(uiState.friends) { user ->
-                        FriendItem(user = user)
+                    items(uiState.friends) { friend ->
+                        UserListRow(
+                            name = friend.name,
+                            points = friend.points,
+                            photoUrl = friend.photoUrl
+                        )
                     }
                 }
             }
@@ -174,34 +213,52 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
     }
 }
 
+
 @Composable
 private fun SectionTitle(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+        modifier = Modifier.padding(top = 16.dp, bottom = 4.dp),
+        color = MaterialTheme.colorScheme.primary
     )
 }
 
 @Composable
 private fun UserSearchResultItem(user: UserProfileEntity, onAddFriend: () -> Unit) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column {
-                Text(user.name, fontWeight = FontWeight.Bold)
-                Text(user.email, style = MaterialTheme.typography.bodySmall)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (user.photoUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = user.photoUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(Icons.Default.Person, contentDescription = null, tint = Color.Gray)
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
+                    Text(user.name, fontWeight = FontWeight.Bold)
+                    Text(user.email, style = MaterialTheme.typography.bodySmall)
+                }
             }
             IconButton(onClick = onAddFriend) {
-                Icon(Icons.Default.PersonAdd, contentDescription = "Add friend")
+                Icon(Icons.Default.PersonAdd, contentDescription = "Add friend", tint = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -210,43 +267,51 @@ private fun UserSearchResultItem(user: UserProfileEntity, onAddFriend: () -> Uni
 @Composable
 private fun FriendRequestItem(user: UserProfileEntity, onAccept: () -> Unit, onDecline: () -> Unit) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(user.email, fontWeight = FontWeight.Bold)
-                Text("Wants to be your friend", style = MaterialTheme.typography.bodySmall)
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                if (user.photoUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = user.photoUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.LightGray, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(user.email.take(1).uppercase(), fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
+                    Text(user.name.ifEmpty { user.email }, fontWeight = FontWeight.Bold)
+                    Text("Wants to be your friend", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
             }
+
             Row {
-                IconButton(onClick =  onAccept){
+                IconButton(onClick = onAccept) {
                     Icon(Icons.Default.Check, contentDescription = "Accept", tint = Color(0xFF4CAF50))
                 }
                 IconButton(onClick = onDecline) {
                     Icon(Icons.Default.Clear, contentDescription = "Decline", tint = MaterialTheme.colorScheme.error)
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun FriendItem(user: UserProfileEntity) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(user.name, fontWeight = FontWeight.Bold)
         }
     }
 }

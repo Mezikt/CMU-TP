@@ -17,6 +17,8 @@ class UserProfileEntity {
     var email: String = ""
     var points: Long = 0L
 
+    var photoUrl: String = ""
+
     @Ignore
     var friends: List<String> = emptyList()
     @Ignore
