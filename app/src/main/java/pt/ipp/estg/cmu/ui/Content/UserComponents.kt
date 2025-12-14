@@ -6,16 +6,20 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
 @Composable
 fun UserListRow(
@@ -37,18 +41,23 @@ fun UserListRow(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             if (photoUrl.isNotEmpty()) {
                 AsyncImage(
-                    model = photoUrl,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(photoUrl)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = "Foto de $name",
                     modifier = Modifier
                         .size(50.dp)
                         .clip(CircleShape)
                         .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    error = rememberVectorPainter(Icons.Default.Warning),
+                    placeholder = rememberVectorPainter(Icons.Default.Person)
                 )
             } else {
+                // Se não tiver link
                 Box(
                     modifier = Modifier
                         .size(50.dp)
