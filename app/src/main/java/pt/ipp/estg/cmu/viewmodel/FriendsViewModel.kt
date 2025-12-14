@@ -5,7 +5,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import pt.ipp.estg.cmu.repository.UserProfileRepository
 import pt.ipp.estg.cmu.database.UserProfileEntity
+
 
 // UI State for the Friends Screen
 data class FriendsUiState(
@@ -66,13 +69,25 @@ class FriendsViewModel(private val repository: UserProfileRepository) : ViewMode
     }
 
     private fun searchUsers(query: String) {
+        if (query.isBlank()) {
+            _uiState.value = _uiState.value.copy(searchResults = emptyList())
+            return
+        }
+
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val results = repository.searchUsers(query)
-                _uiState.value = _uiState.value.copy(isLoading = false, searchResults = results)
+                val usersCollection = Firebase.firestore.collection("/friendRequest")
+
+                val searchQuery = usersCollection
+                    .orderBy("name")
+                    .startAt(query)
+                    .endAt(query + '\uf8ff')
+
+                var searchResult = repository.searchUsers(searchQuery)
+
+                _uiState.value = _uiState.value.copy(isLoading = false, searchResults = searchResult)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)
+                Log.e("TAG", "Error searching users", e)
             }
         }
     }
@@ -110,7 +125,7 @@ class FriendsViewModel(private val repository: UserProfileRepository) : ViewMode
         }
     }
 
-    // --- CORREÇÃO AQUI ---
+
     fun acceptFriendRequest(userSentEmail: String) {
         Log.w(TAG, "Attempting to accept request from: $userSentEmail")
         viewModelScope.launch {

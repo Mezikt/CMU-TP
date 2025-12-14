@@ -1,11 +1,15 @@
 package pt.ipp.estg.cmu.repository
 
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import pt.ipp.estg.cmu.database.UserProfileDao
 import pt.ipp.estg.cmu.database.UserProfileEntity
@@ -71,17 +75,11 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
 
     // --- Friends Management --- //
 
-    suspend fun searchUsers(query: String): List<UserProfileEntity> {
-        val currentUserId = auth.currentUser?.uid ?: return emptyList()
+    suspend fun searchUsers(query: Query): List<UserProfileEntity> {
 
-        val nameQuery = usersCollection
-            .whereGreaterThanOrEqualTo("name", query)
-            .whereLessThanOrEqualTo("name", query + '\uf8ff')
-            .get().await()
+        val queryResult = query.get().await()
+        return queryResult.documents.map { documentToUserProfile(it) }
 
-        return nameQuery.documents
-            .map { documentToUserProfile(it) }
-            .filter { it.uid != currentUserId } // Exclude current user
     }
 
     suspend fun getUserByEmail(email: String): UserProfileEntity? {
