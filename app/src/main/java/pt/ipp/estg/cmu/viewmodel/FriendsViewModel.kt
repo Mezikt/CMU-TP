@@ -1,12 +1,18 @@
 package pt.ipp.estg.cmu.viewmodel
 
+import android.content.ContentValues.TAG
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import pt.ipp.estg.cmu.repository.UserProfileRepository
 import pt.ipp.estg.cmu.database.UserProfileEntity
 
@@ -24,6 +30,8 @@ class FriendsViewModel(private val repository: UserProfileRepository) : ViewMode
 
     private val _uiState = MutableStateFlow(FriendsUiState())
     val uiState: StateFlow<FriendsUiState> = _uiState.asStateFlow()
+    val auth = Firebase.auth
+    val db = Firebase.firestore
 
     init {
         loadInitialData()
@@ -35,13 +43,16 @@ class FriendsViewModel(private val repository: UserProfileRepository) : ViewMode
             try {
                 val friends = repository.getCurrentUserFriends()
                 val requests = repository.getFriendRequests()
+//                Log.d("FriendsViewModel", "Successfully loaded friends and requests.")
+
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     friends = friends,
                     friendRequests = requests
                 )
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)
+//                Log.e("FriendsViewModel", "Error loading initial data", e)
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "Failed to load data: ${e.message}")
             }
         }
     }
@@ -65,22 +76,52 @@ class FriendsViewModel(private val repository: UserProfileRepository) : ViewMode
         }
     }
 
-    fun sendFriendRequest(userId: String) {
+    fun sendFriendRequest(friendToAdd: String) {
         viewModelScope.launch {
-            val result = repository.sendFriendRequest(userId)
-            if (result.isFailure) {
-                _uiState.value = _uiState.value.copy(errorMessage = result.exceptionOrNull()?.message)
+            try {
+                val user = auth.currentUser?.email
+
+                if(user != null){
+                    val db = Firebase.firestore
+                    val doc = mapOf(
+                        "from" to user,
+                        "receive" to friendToAdd,
+                        "status" to "pending",
+                    )
+
+                    db.collection("/friendRequest").add(doc).await()
+                }else{
+                    throw Exception("User not authenticated")
+                }
+            }catch (e : Exception){
+                _uiState.value = _uiState.value.copy(errorMessage = e.message)
             }
         }
     }
 
-    fun acceptFriendRequest(userId: String) {
+    fun acceptFriendRequest(userSentEmail: String) {
+        Log.w(TAG, "Entrou no ViewModel acceptFriendRequest")
         viewModelScope.launch {
-            val result = repository.acceptFriendRequest(userId)
-            if (result.isSuccess) {
-                loadInitialData() // Refresh data after accepting
-            } else {
-                _uiState.value = _uiState.value.copy(errorMessage = result.exceptionOrNull()?.message)
+            try {
+                val userRecieve = auth.currentUser?.email
+
+                if(userRecieve != null){
+                    val db = Firebase.firestore
+
+                    val acceptSnapshot = db.collection("/friendRequest")
+                        .whereEqualTo("from", userSentEmail)
+                        .whereEqualTo("receive", userRecieve)
+                        .limit(1)
+
+                    var doc = acceptSnapshot.get().await().documents[0].reference;
+
+                    doc.update("status", "accepted")
+
+                }else{
+                    throw Exception("User not authenticated")
+                }
+            }catch (e : Exception){
+                _uiState.value = _uiState.value.copy(errorMessage = e.message)
             }
         }
     }

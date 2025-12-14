@@ -84,27 +84,25 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
             .filter { it.uid != currentUserId } // Exclude current user
     }
 
-    suspend fun sendFriendRequest(friendId: String): Result<Unit> {
-        val currentUserId = auth.currentUser?.uid ?: return Result.failure(Exception("User not signed in"))
-
+    suspend fun getUserByEmail(email: String): UserProfileEntity? {
         return try {
-            usersCollection.document(currentUserId).update("friendRequestsSent", FieldValue.arrayUnion(friendId)).await()
-            usersCollection.document(friendId).update("friendRequestsReceived", FieldValue.arrayUnion(currentUserId)).await()
-            Result.success(Unit)
+            val querySnapshot = usersCollection.whereEqualTo("email", email).limit(1).get().await()
+            if (querySnapshot.isEmpty) {
+                null
+            } else {
+                documentToUserProfile(querySnapshot.documents.first())
+            }
         } catch (e: Exception) {
-            Result.failure(e)
+            null
         }
     }
 
-    suspend fun acceptFriendRequest(friendId: String): Result<Unit> {
+
+    suspend fun acceptFriendRequest(doc: DocumentSnapshot): Result<Unit> {
         val currentUserId = auth.currentUser?.uid ?: return Result.failure(Exception("User not signed in"))
 
         return try {
-            usersCollection.document(currentUserId).update("friends", FieldValue.arrayUnion(friendId)).await()
-            usersCollection.document(friendId).update("friends", FieldValue.arrayUnion(currentUserId)).await()
 
-            usersCollection.document(currentUserId).update("friendRequestsReceived", FieldValue.arrayRemove(friendId)).await()
-            usersCollection.document(friendId).update("friendRequestsSent", FieldValue.arrayRemove(currentUserId)).await()
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -116,8 +114,8 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
         val currentUserId = auth.currentUser?.uid ?: return Result.failure(Exception("User not signed in"))
 
         return try {
-            usersCollection.document(currentUserId).update("friendRequestsReceived", FieldValue.arrayRemove(friendId)).await()
-            usersCollection.document(friendId).update("friendRequestsSent", FieldValue.arrayRemove(currentUserId)).await()
+            // Similar to accept, you need to find and delete/update the specific request document.
+            // Placeholder for now.
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -135,13 +133,31 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
     }
 
     suspend fun getFriendRequests(): List<UserProfileEntity> {
-        val currentUser = getCurrentUserDocument() ?: return emptyList()
-        val requestIds = currentUser.friendRequestsReceived
+        val currentUserEmail = auth.currentUser?.email ?: return emptyList()
+        return try {
+            val requestsSnapshot = firestore.collection("friendRequest")
+                .whereEqualTo("receive", currentUserEmail)
+                .whereEqualTo("status", "pending")
+                .get()
+                .await()
 
-        if (requestIds.isEmpty()) return emptyList()
+            if (requestsSnapshot.isEmpty) return emptyList()
 
-        val requestsQuery = usersCollection.whereIn("uid", requestIds).get().await()
-        return requestsQuery.documents.map { documentToUserProfile(it) }
+            val senderEmails = requestsSnapshot.documents.mapNotNull { it.getString("from") }
+            if (senderEmails.isEmpty()) return emptyList()
+
+            // Chunk the list of emails into sublists of 10
+            val emailChunks = senderEmails.chunked(10)
+            val users = mutableListOf<UserProfileEntity>()
+
+            for (chunk in emailChunks) {
+                val usersSnapshot = usersCollection.whereIn("email", chunk).get().await()
+                users.addAll(usersSnapshot.documents.map { documentToUserProfile(it) })
+            }
+            users
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     private suspend fun getCurrentUserDocument(): UserProfileEntity? {
