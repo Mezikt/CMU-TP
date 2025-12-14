@@ -6,21 +6,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import pt.ipp.estg.cmu.ui.theme.CMU_TPTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
+import pt.ipp.estg.cmu.R
 import pt.ipp.estg.cmu.ui.theme.ThemeViewModel
-import androidx.compose.runtime.collectAsState
-import androidx.navigation.NavHostController
 
 @Composable
 fun SettingsPage(
-    // Allow injection of a ThemeViewModel for testing; default to activity-scoped
     toChangePassword: () -> Unit,
     themeViewModel: ThemeViewModel = viewModel()
-
 ) {
     val isDarkTheme by themeViewModel.isDark.collectAsState()
     var notificationsEnabled by remember { mutableStateOf(true) }
@@ -31,37 +26,46 @@ fun SettingsPage(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Account Settings Section
+
         Text(
-            text = "Account Settings",
+            text = stringResource(R.string.header_account_settings),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        SettingItem(title = "Change Password", onClick = toChangePassword)
-        SettingItem(title = "Update Email Address", onClick = { /* TODO: Handle click */ })
-        SettingItem(title = "Manage Profile Information", onClick = { /* TODO: Handle click */ })
+        SettingItem(
+            title = stringResource(R.string.pref_change_password),
+            onClick = toChangePassword
+        )
+        SettingItem(
+            title = stringResource(R.string.pref_update_email),
+            onClick = { /* TODO: Handle click */ }
+        )
+        SettingItem(
+            title = stringResource(R.string.pref_manage_profile),
+            onClick = { /* TODO: Handle click */ }
+        )
 
         Divider(modifier = Modifier.padding(vertical = 16.dp))
 
-        // App Preferences Section
+
         Text(
-            text = "App Preferences",
+            text = stringResource(R.string.header_app_preferences),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 8.dp)
         )
         SwitchSettingItem(
-            title = "Theme (Dark Mode)",
+            title = stringResource(R.string.pref_dark_mode),
             checked = isDarkTheme,
             onCheckedChange = { themeViewModel.setDark(it) }
         )
-        // You can add logic here to handle "System Default"
+
         SwitchSettingItem(
-            title = "Notifications",
+            title = stringResource(R.string.pref_notifications),
             checked = notificationsEnabled,
             onCheckedChange = { notificationsEnabled = it }
         )
         SwitchSettingItem(
-            title = "Location Services",
+            title = stringResource(R.string.pref_location),
             checked = locationServicesEnabled,
             onCheckedChange = { locationServicesEnabled = it }
         )

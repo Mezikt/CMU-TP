@@ -1,5 +1,6 @@
 package pt.ipp.estg.cmu.ui.Content
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -13,32 +14,34 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import pt.ipp.estg.cmu.R
 
-sealed class BottomBarScreen(val route: String, val title: String, val icon: ImageVector) {
+sealed class BottomBarScreen(val route: String, @StringRes val title: Int, val icon: ImageVector) {
     object Home : BottomBarScreen(
         route = "home",
-        title = "Home",
+        title = R.string.nav_home,
         icon = Icons.Filled.Home
     )
     object Map : BottomBarScreen(
         route = "map",
-        title = "Map",
+        title = R.string.nav_map,
         icon = Icons.Filled.LocationOn
     )
     object Profile : BottomBarScreen(
         route = "profile",
-        title = "Profile",
+        title = R.string.nav_profile,
         icon = Icons.Filled.Person
     )
 
     object Settings : BottomBarScreen(
         route = "settings",
-        title = "Settings",
+        title = R.string.nav_settings,
         icon = Icons.Filled.Settings
     )
 }
@@ -76,12 +79,12 @@ fun RowScope.AddItem(
 ) {
     NavigationBarItem(
         label = {
-            Text(text = screen.title)
+            Text(text = stringResource(id = screen.title))
         },
         icon = {
             Icon(
                 imageVector = screen.icon,
-                contentDescription = "Navigation Icon"
+                contentDescription = stringResource(R.string.desc_nav_icon)
             )
         },
         selected = currentDestination?.hierarchy?.any {

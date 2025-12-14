@@ -1,4 +1,5 @@
 package pt.ipp.estg.cmu.ui.Content
+
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -15,6 +17,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import pt.ipp.estg.cmu.R
 
 @Composable
 fun LoginPage(
@@ -40,35 +43,37 @@ fun LoginPage(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
+
             Text(
-                text = "Mobilidade Suave",
+                text = stringResource(R.string.title_mobility),
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.primary
             )
 
-            // Subtítulo
+
             Text(
-                text = "Bem-vindo de volta!",
+                text = stringResource(R.string.subtitle_welcome_back),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo de texto para o Email
+
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.label_email)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
 
+
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
+                label = { Text(stringResource(R.string.label_password)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
@@ -86,15 +91,20 @@ fun LoginPage(
                                 onLoginSuccess()
                             } catch (e: Exception) {
                                 isLoading = false
-                                Toast.makeText(context, "Falha no login: ${e.message}", Toast.LENGTH_LONG).show()
 
-                                Log.d("TAG", "Falha no login: ${e.message}");
-                                Log.d("TAG", "Falha no login: ${e.stackTraceToString()} ");
+                                val errorMsg = context.getString(R.string.error_login_failed) + " ${e.message}"
+                                Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
 
+                                Log.d("TAG", "Falha no login: ${e.message}")
+                                Log.d("TAG", "Falha no login: ${e.stackTraceToString()} ")
                             }
                         }
                     } else {
-                        Toast.makeText(context, "Por favor, preencha todos os campos.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.error_fill_all_fields),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 },
                 modifier = Modifier
@@ -109,12 +119,12 @@ fun LoginPage(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Login")
+                    Text(stringResource(R.string.btn_login))
                 }
             }
 
             TextButton(onClick = onNavigateToRegister) {
-                Text("Não tem conta? Registe-se")
+                Text(stringResource(R.string.btn_register_prompt))
             }
         }
     }

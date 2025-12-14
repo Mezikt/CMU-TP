@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -17,6 +18,7 @@ import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import pt.ipp.estg.cmu.R
 
 @Composable
 fun RegisterPage(
@@ -29,13 +31,11 @@ fun RegisterPage(
 
     val auth = Firebase.auth
 
-
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
-
 
     Box(
         modifier = modifier
@@ -49,13 +49,13 @@ fun RegisterPage(
         ) {
 
             Text(
-                text = "Crie a sua conta",
+                text = stringResource(R.string.title_create_account),
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.primary
             )
 
             Text(
-                text = "É rápido e fácil.",
+                text = stringResource(R.string.subtitle_quick_easy),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -63,37 +63,34 @@ fun RegisterPage(
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Nome") },
+                label = { Text(stringResource(R.string.label_name)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
 
-
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.label_email)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
 
-
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
+                label = { Text(stringResource(R.string.label_password)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
 
-
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
-                label = { Text("Confirmar Password") },
+                label = { Text(stringResource(R.string.label_confirm_password)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
@@ -103,11 +100,19 @@ fun RegisterPage(
             Button(
                 onClick = {
                     if (name.isBlank() || email.isBlank() || password.isBlank()) {
-                        Toast.makeText(context, "Preencha todos os campos.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.error_fill_all_fields),
+                            Toast.LENGTH_SHORT
+                        ).show()
                         return@Button
                     }
                     if (password != confirmPassword) {
-                        Toast.makeText(context, "As passwords não coincidem.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.error_passwords_mismatch),
+                            Toast.LENGTH_SHORT
+                        ).show()
                         return@Button
                     }
                     isLoading = true
@@ -132,7 +137,8 @@ fun RegisterPage(
                             onRegisterSuccess()
                         } catch (e: Exception) {
                             isLoading = false
-                            Toast.makeText(context, "Falha no registo: ${e.message}", Toast.LENGTH_LONG).show()
+                            val errorMsg = context.getString(R.string.error_register_failed) + "${e.message}"
+                            Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
                         }
                     }
                 },
@@ -148,13 +154,12 @@ fun RegisterPage(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Registar")
+                    Text(stringResource(R.string.btn_register))
                 }
             }
 
-
             TextButton(onClick = onBackToLogin) {
-                Text("Já tem uma conta? Faça login")
+                Text(stringResource(R.string.btn_login_prompt))
             }
         }
     }

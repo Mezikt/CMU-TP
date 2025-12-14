@@ -13,9 +13,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import pt.ipp.estg.cmu.R
 import pt.ipp.estg.cmu.viewmodel.ChangePasswordViewModel
 
 @Composable
@@ -50,14 +52,14 @@ fun ChangePasswordPage(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Troca de Palavra-Passe",
+                text = stringResource(R.string.title_change_password),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
             OutlinedTextField(
                 value = currentPassword,
                 onValueChange = { currentPassword = it },
-                label = { Text("Palavra-passe Atual") },
+                label = { Text(stringResource(R.string.label_current_password)) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -67,7 +69,7 @@ fun ChangePasswordPage(
             OutlinedTextField(
                 value = newPassword,
                 onValueChange = { newPassword = it },
-                label = { Text("Nova Palavra-passe") },
+                label = { Text(stringResource(R.string.label_new_password)) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -77,7 +79,7 @@ fun ChangePasswordPage(
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
-                label = { Text("Confirmar Nova Palavra-passe") },
+                label = { Text(stringResource(R.string.label_confirm_new_password)) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,7 +101,7 @@ fun ChangePasswordPage(
                 if (uiState.isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
-                    Text("Trocar Palavra-passe")
+                    Text(stringResource(R.string.btn_change_password))
                 }
             }
 
@@ -126,7 +128,7 @@ private fun ButtonBack(
     ) {
         Icon(
             imageVector = Icons.Default.ArrowBack,
-            contentDescription = "Voltar"
+            contentDescription = stringResource(R.string.desc_back)
         )
     }
 }

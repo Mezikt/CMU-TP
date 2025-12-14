@@ -1,3 +1,108 @@
 <resources>
     <string name="app_name">CMU_TP</string>
+    <string name="title_mobility">Mobilidade Suave</string>
+    <string name="subtitle_welcome_back">Bem-vindo de volta!</string>
+    <string name="label_email">Email</string>
+    <string name="label_password">Password</string>
+    <string name="btn_login">Login</string>
+    <string name="btn_register_prompt">Não tem conta? Registe-se</string>
+    <string name="error_fill_all_fields">Por favor, preencha todos os campos.</string>
+    <string name="error_login_failed">Falha no login: </string>
+
+    <string name="title_change_password">Troca de Palavra-Passe</string>
+    <string name="label_current_password">Palavra-passe Atual</string>
+    <string name="label_new_password">Nova Palavra-passe</string>
+    <string name="label_confirm_new_password">Confirmar Nova Palavra-passe</string>
+    <string name="btn_change_password">Trocar Palavra-passe</string>
+    <string name="desc_back">Voltar</string>
+
+    <string name="title_friends">Amigos</string>
+    <string name="label_search_friends">Procurar novos amigos por nome</string>
+    <string name="title_search_results">Resultados da Pesquisa</string>
+    <string name="title_friend_requests">Pedidos de Amizade</string>
+    <string name="title_your_friends">Os teus Amigos</string>
+    <string name="msg_no_friends">Ainda não tens amigos. Adiciona alguns!</string>
+    <string name="desc_add_friend">Adicionar amigo</string>
+    <string name="msg_friend_request">Quer ser teu amigo</string>
+    <string name="desc_accept">Aceitar</string>
+    <string name="desc_decline">Recusar</string>
+
+    <string name="title_trip_history">Histórico de Viagens</string>
+    <string name="msg_no_trips">Ainda não tens viagens registadas.</string>
+    <string name="label_date">Data:</string>
+    <string name="label_distance">Distância:</string>
+    <string name="label_duration">Duração:</string>
+    <string name="label_points">Pontos:</string>
+    <string name="label_na">N/A</string>
+
+    <string name="title_welcome">Bem-vindo!</string>
+    <string name="label_search_transport">Pesquisar locais ou transporte...</string>
+    <string name="btn_find_ride">Encontrar Viagem</string>
+    <string name="btn_record_trip">Gravar Viagem</string>
+    <string name="title_leaderboard">Classificações</string>
+    <string name="desc_leaderboard_promo">Vê como te comparas com outros utilizadores.</string>
+    <string name="btn_view_leaderboard">Ver Classificações</string>
+
+    <string name="filter_global">Global</string>
+    <string name="filter_friends_btn">Amigos</string>
+    <string name="msg_no_friends_leaderboard">Ainda não tens amigos na classificação!</string>
+    <string name="msg_empty_leaderboard">A classificação está vazia de momento.</string>
+    <string name="label_pts">pts</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_map">Mapa</string>
+    <string name="nav_profile">Perfil</string>
+    <string name="nav_settings">Definições</string>
+    <string name="desc_nav_icon">Ícone de navegação</string>
+
+    <string name="title_error">Ocorreu um Erro</string>
+    <string name="btn_try_again">Tentar Novamente</string>
+    <string name="title_not_logged_in">Não tem sessão iniciada</string>
+    <string name="msg_login_profile_prompt">Por favor, inicie sessão para ver o seu perfil.</string>
+    <string name="btn_go_to_login">Ir para Login</string>
+    <string name="title_statistics">Estatísticas</string>
+    <string name="label_points_prefix">Pontos:</string>
+    <string name="btn_logout">Sair</string>
+    <string name="desc_logout_icon">Ícone de Sair</string>
+
+    <string name="title_create_account">Crie a sua conta</string>
+    <string name="subtitle_quick_easy">É rápido e fácil.</string>
+    <string name="label_name">Nome</string>
+    <string name="label_confirm_password">Confirmar Password</string>
+    <string name="error_passwords_mismatch">As passwords não coincidem.</string>
+    <string name="error_register_failed">Falha no registo: </string>
+    <string name="btn_register">Registar</string>
+    <string name="btn_login_prompt">Já tem uma conta? Faça login</string>
+
+    <string name="msg_review_submitted">Review enviada com sucesso!</string>
+    <string name="title_review_location">Avaliar Local</string>
+    <string name="label_reviewing_point">A avaliar ponto: %1$s</string>
+    <string name="label_your_rating">A tua Classificação</string>
+    <string name="label_comment_hint">Deixa um comentário (opcional)</string>
+    <string name="btn_submit_review">Enviar Avaliação</string>
+    <string name="desc_star_rating">Estrela %1$d</string>
+
+    <string name="header_account_settings">Definições de Conta</string>
+    <string name="pref_change_password">Alterar Palavra-passe</string>
+    <string name="pref_update_email">Atualizar Email</string>
+    <string name="pref_manage_profile">Gerir Perfil</string>
+    <string name="header_app_preferences">Preferências da App</string>
+    <string name="pref_dark_mode">Tema (Modo Escuro)</string>
+    <string name="pref_notifications">Notificações</string>
+    <string name="pref_location">Serviços de Localização</string>
+
+    <string name="msg_trip_saved">Viagem guardada com sucesso!</string>
+    <string name="title_record_trip">Gravar Viagem</string>
+    <string name="msg_location_permission_needed">Permissão de localização necessária para gravar uma viagem.</string>
+    <string name="label_time">Tempo</string>
+    <string name="btn_stop_recording">Parar Gravação</string>
+    <string name="btn_start_recording">Iniciar Gravação</string>
+
+    <string name="msg_loading_weather">A carregar meteorologia...</string>
+    <string name="desc_weather_icon">Ícone do tempo</string>
+
+    <string name="desc_share">Partilhar Viagem</string>
+    <string name="msg_share_trip_text">Vê a minha viagem na App SoftMobility! 🚲\nDistância: %1$s km\nDuração: %2$s\nPontos ganhos: %3$d</string>
+
+    <string name="warn_dark_mode">Está escuro! Ligue as luzes 💡</string>
 </resources>

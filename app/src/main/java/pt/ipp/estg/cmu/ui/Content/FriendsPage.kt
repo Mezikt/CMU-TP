@@ -13,15 +13,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import pt.ipp.estg.cmu.R
 import pt.ipp.estg.cmu.database.AppDatabase
 import pt.ipp.estg.cmu.database.UserProfileEntity
 import pt.ipp.estg.cmu.repository.UserProfileRepository
 import pt.ipp.estg.cmu.viewmodel.FriendsViewModel
-import pt.ipp.estg.cmu.viewmodel.FriendsUiState
-import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,10 +35,13 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Friends") },
+                title = { Text(stringResource(R.string.title_friends)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.desc_back)
+                        )
                     }
                 }
             )
@@ -55,15 +59,15 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
                 }
             }
 
-            if (uiState.errorMessage != null) {
-                Text(uiState.errorMessage!!, color = MaterialTheme.colorScheme.error)
+            uiState.errorMessage?.let { errorMsg ->
+                Text(errorMsg, color = MaterialTheme.colorScheme.error)
             }
 
             // Search Bar
             OutlinedTextField(
                 value = uiState.searchQuery,
-                onValueChange = { viewModel.onSearchQueryChanged(it) },
-                label = { Text("Search for new friends by name") },
+                onValueChange = { query -> viewModel.onSearchQueryChanged(query) },
+                label = { Text(stringResource(R.string.label_search_friends)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -72,31 +76,31 @@ fun FriendsPage(onNavigateBack: () -> Unit) {
             LazyColumn {
                 // Search Results
                 if (uiState.searchResults.isNotEmpty()) {
-                    item { SectionTitle(title = "Search Results") }
-                    items(uiState.searchResults) {
-                        UserSearchResultItem(user = it, onAddFriend = { viewModel.sendFriendRequest(it.uid) })
+                    item { SectionTitle(title = stringResource(R.string.title_search_results)) }
+                    items(uiState.searchResults) { user ->
+                        UserSearchResultItem(user = user, onAddFriend = { viewModel.sendFriendRequest(user.uid) })
                     }
                 }
 
                 // Friend Requests
                 if (uiState.friendRequests.isNotEmpty()) {
-                    item { SectionTitle(title = "Friend Requests") }
-                    items(uiState.friendRequests) {
+                    item { SectionTitle(title = stringResource(R.string.title_friend_requests)) }
+                    items(uiState.friendRequests) { user ->
                         FriendRequestItem(
-                            user = it,
-                            onAccept = { viewModel.acceptFriendRequest(it.uid) },
-                            onDecline = { viewModel.declineFriendRequest(it.uid) }
+                            user = user,
+                            onAccept = { viewModel.acceptFriendRequest(user.uid) },
+                            onDecline = { viewModel.declineFriendRequest(user.uid) }
                         )
                     }
                 }
 
                 // Friends List
-                item { SectionTitle(title = "Your Friends") }
+                item { SectionTitle(title = stringResource(R.string.title_your_friends)) }
                 if (uiState.friends.isEmpty()) {
-                    item { Text("You have no friends yet. Add some!") }
+                    item { Text(stringResource(R.string.msg_no_friends)) }
                 } else {
-                    items(uiState.friends) {
-                        FriendItem(user = it)
+                    items(uiState.friends) { friend ->
+                        FriendItem(user = friend)
                     }
                 }
             }
@@ -127,7 +131,10 @@ private fun UserSearchResultItem(user: UserProfileEntity, onAddFriend: () -> Uni
                 Text(user.email, style = MaterialTheme.typography.bodySmall)
             }
             IconButton(onClick = onAddFriend) {
-                Icon(Icons.Default.PersonAdd, contentDescription = "Add friend")
+                Icon(
+                    imageVector = Icons.Default.PersonAdd,
+                    contentDescription = stringResource(R.string.desc_add_friend)
+                )
             }
         }
     }
@@ -143,14 +150,22 @@ private fun FriendRequestItem(user: UserProfileEntity, onAccept: () -> Unit, onD
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(user.name, fontWeight = FontWeight.Bold)
-                Text("Wants to be your friend", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.msg_friend_request), style = MaterialTheme.typography.bodySmall)
             }
             Row {
                 IconButton(onClick = onAccept) {
-                    Icon(Icons.Default.Check, contentDescription = "Accept", tint = Color(0xFF4CAF50))
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = stringResource(R.string.desc_accept),
+                        tint = Color(0xFF4CAF50)
+                    )
                 }
                 IconButton(onClick = onDecline) {
-                    Icon(Icons.Default.Clear, contentDescription = "Decline", tint = MaterialTheme.colorScheme.error)
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = stringResource(R.string.desc_decline),
+                        tint = MaterialTheme.colorScheme.error
+                    )
                 }
             }
         }

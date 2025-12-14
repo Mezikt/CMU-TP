@@ -1,10 +1,12 @@
 package pt.ipp.estg.cmu.ui.Content
 
+import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -12,11 +14,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import pt.ipp.estg.cmu.R
 import pt.ipp.estg.cmu.data.Trip
 import pt.ipp.estg.cmu.data.TripRepository
 import pt.ipp.estg.cmu.viewmodel.HistoryViewModel
@@ -35,10 +40,13 @@ fun HistoryPage(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Trip History") },
+                title = { Text(stringResource(R.string.title_trip_history)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.desc_back)
+                        )
                     }
                 }
             )
@@ -56,7 +64,7 @@ fun HistoryPage(
             } else if (uiState.errorMessage != null) {
                 Text(text = uiState.errorMessage!!)
             } else if (uiState.trips.isEmpty()) {
-                Text("You have no recorded trips yet.")
+                Text(stringResource(R.string.msg_no_trips))
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     items(uiState.trips) { trip ->
@@ -70,27 +78,72 @@ fun HistoryPage(
 
 @Composable
 private fun TripItem(trip: Trip) {
+    val context = LocalContext.current
+    val naString = stringResource(R.string.label_na)
+
+    val formattedDistance = "%.2f".format(trip.distance / 1000)
+    val formattedDuration = formatDuration(trip.duration)
+
+    val shareMessageTemplate = stringResource(R.string.msg_share_trip_text)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            val formattedDate = trip.date?.toDate()?.let {
-                SimpleDateFormat("dd MMMM yyyy, HH:mm", Locale.getDefault()).format(it)
-            } ?: "N/A"
 
-            Text(text = "Date: $formattedDate", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
-            InfoRow(label = "Distance:", value = "%.2f km".format(trip.distance / 1000))
-            InfoRow(label = "Duration:", value = formatDuration(trip.duration))
-            InfoRow(label = "Points:", value = "${trip.points}")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                val formattedDate = trip.date?.toDate()?.let {
+                    SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(it)
+                } ?: naString
+
+                Text(
+                    text = "${stringResource(R.string.label_date)} $formattedDate",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+
+
+                IconButton(onClick = {
+
+                    val message = String.format(shareMessageTemplate, formattedDistance, formattedDuration, trip.points)
+
+
+                    val sendIntent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, message)
+                        type = "text/plain"
+                    }
+
+                    val shareIntent = Intent.createChooser(sendIntent, null)
+                    context.startActivity(shareIntent)
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = stringResource(R.string.desc_share),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+
+            InfoRow(label = stringResource(R.string.label_distance), value = "$formattedDistance km")
+            InfoRow(label = stringResource(R.string.label_duration), value = formattedDuration)
+            InfoRow(label = stringResource(R.string.label_points), value = "${trip.points}")
         }
     }
 }
 
 @Composable
 private fun InfoRow(label: String, value: String) {
-    Row {
+    Row(modifier = Modifier.padding(vertical = 2.dp)) {
         Text(text = label, fontWeight = FontWeight.SemiBold, modifier = Modifier.width(100.dp))
         Text(text = value)
     }
