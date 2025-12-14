@@ -1,25 +1,21 @@
 package pt.ipp.estg.cmu.viewmodel
 
-import android.annotation.SuppressLint
-import android.os.Looper
+import android.app.Application
+import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import com.google.maps.android.SphericalUtil
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import pt.ipp.estg.cmu.data.Trip
 import pt.ipp.estg.cmu.data.TripRepository
 import pt.ipp.estg.cmu.repository.UserProfileRepository
+import pt.ipp.estg.cmu.data.TripService
 
-// UI State for the Trip Recording Screen
 data class TripRecordingUiState(
     val isRecording: Boolean = false,
     val distance: Double = 0.0,
@@ -30,108 +26,85 @@ data class TripRecordingUiState(
     val errorMessage: String? = null
 )
 
-@SuppressLint("MissingPermission")
 class TripRecordingViewModel(
+    private val application: Application,
     private val tripRepository: TripRepository,
-    private val userProfileRepository: UserProfileRepository,
-    private val fusedLocationClient: FusedLocationProviderClient
+    private val userProfileRepository: UserProfileRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TripRecordingUiState())
     val uiState = _uiState.asStateFlow()
 
-    private var timerJob: Job? = null
-
-    // --- City Center Definition ---
-    // Bounding box for Porto city center
     private val portoCenterBounds = object {
-        private val sw = LatLng(41.14, -8.63) // Southwest corner
-        private val ne = LatLng(41.16, -8.60) // Northeast corner
-
+        private val sw = LatLng(41.14, -8.63)
+        private val ne = LatLng(41.16, -8.60)
         fun contains(point: LatLng): Boolean {
             return point.latitude >= sw.latitude && point.latitude <= ne.latitude &&
-                   point.longitude >= sw.longitude && point.longitude <= ne.longitude
+                    point.longitude >= sw.longitude && point.longitude <= ne.longitude
         }
     }
 
-    private val locationCallback = object : LocationCallback() {
-        override fun onLocationResult(result: LocationResult) {
-            result.lastLocation?.let { location ->
-                val newLatLng = LatLng(location.latitude, location.longitude)
-                val currentPath = _uiState.value.pathPoints.toMutableList()
-                var currentDistance = _uiState.value.distance
-
-                if (currentPath.isNotEmpty()) {
-                    currentDistance += SphericalUtil.computeDistanceBetween(
-                        currentPath.last(),
-                        newLatLng
-                    )
+    init {
+        viewModelScope.launch {
+            launch {
+                TripService.distance.collect { dist ->
+                    _uiState.value = _uiState.value.copy(distance = dist)
                 }
-                currentPath.add(newLatLng)
-
-                _uiState.value = _uiState.value.copy(
-                    pathPoints = currentPath,
-                    distance = currentDistance
-                )
+            }
+            launch {
+                TripService.elapsedTime.collect { time ->
+                    _uiState.value = _uiState.value.copy(elapsedTime = time)
+                }
+            }
+            launch {
+                TripService.pathPoints.collect { points ->
+                    _uiState.value = _uiState.value.copy(pathPoints = points)
+                }
+            }
+            launch {
+                TripService.isTracking.collect { tracking ->
+                    _uiState.value = _uiState.value.copy(isRecording = tracking)
+                }
             }
         }
     }
 
     fun startRecording() {
-        // Reset state for a new trip
-        _uiState.value = TripRecordingUiState(isRecording = true)
-
-        // Start location updates
-        val locationRequest = LocationRequest.create().apply {
-            interval = 5000
-            fastestInterval = 2000
-            priority = Priority.PRIORITY_HIGH_ACCURACY
-        }
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
-
-        // Start timer
-        timerJob?.cancel()
-        timerJob = viewModelScope.launch {
-            while (true) {
-                delay(1000)
-                _uiState.value = _uiState.value.copy(elapsedTime = _uiState.value.elapsedTime + 1)
-            }
+        Intent(application, TripService::class.java).also { intent ->
+            intent.action = "START_TRACKING"
+            application.startService(intent)
         }
     }
 
     fun stopRecording() {
-        // Stop timer and location updates
-        timerJob?.cancel()
-        fusedLocationClient.removeLocationUpdates(locationCallback)
+        Intent(application, TripService::class.java).also { intent ->
+            intent.action = "STOP_TRACKING"
+            application.startService(intent)
+        }
 
+        saveTripData()
+    }
+
+    private fun saveTripData() {
         val currentState = _uiState.value
-        _uiState.value = currentState.copy(isRecording = false, isSaving = true)
+        _uiState.value = currentState.copy(isSaving = true)
 
         viewModelScope.launch {
-            // Ensure there is enough data to save
             if (currentState.pathPoints.size <= 1) {
-                _uiState.value = currentState.copy(isSaving = false, errorMessage = "Not enough data to save the trip.")
+                _uiState.value = currentState.copy(isSaving = false, errorMessage = "Not enough data to save.")
                 return@launch
             }
 
-            val userId = Firebase.auth.currentUser?.uid
-            if (userId == null) {
-                _uiState.value = currentState.copy(isSaving = false, errorMessage = "User not authenticated.")
-                return@launch
-            }
+            val userId = Firebase.auth.currentUser?.uid ?: return@launch
 
-            // --- Point Calculation ---
             var points = (currentState.distance / 100).toLong()
-            // Double points for short trips (<5km)
-            if (currentState.distance < 5000) {
+            if (currentState.distance < 5000) { // Regra < 5km
                 points *= 2
             }
-
-            // --- City Center Bonus ---
-            val isInCityCenter = currentState.pathPoints.any { portoCenterBounds.contains(it) }
-            if (isInCityCenter) {
-                points += 50 // Add 50 bonus points
+            if (currentState.pathPoints.any { portoCenterBounds.contains(it) }) {
+                points += 50
             }
+
 
             val pathForDb = currentState.pathPoints.map { mapOf("latitude" to it.latitude, "longitude" to it.longitude) }
 
@@ -143,33 +116,25 @@ class TripRecordingViewModel(
                 points = points.toInt()
             )
 
-            // --- Save Trip and Update Points ---
+
             val tripResult = tripRepository.saveTrip(trip)
             if (tripResult.isSuccess) {
-                val pointsResult = userProfileRepository.addPointsToCurrentUser(points)
-                if (pointsResult.isSuccess) {
-                    _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
-                } else {
-                    _uiState.value = _uiState.value.copy(isSaving = false, errorMessage = "Trip saved, but failed to update points.")
-                }
+                userProfileRepository.addPointsToCurrentUser(points)
+                _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
             } else {
                 _uiState.value = _uiState.value.copy(isSaving = false, errorMessage = tripResult.exceptionOrNull()?.message)
             }
         }
     }
 
-    // Factory to create the ViewModel with its dependencies
     @Suppress("UNCHECKED_CAST")
     class Factory(
+        private val application: Application,
         private val tripRepository: TripRepository,
-        private val userProfileRepository: UserProfileRepository,
-        private val fusedLocationClient: FusedLocationProviderClient
+        private val userProfileRepository: UserProfileRepository
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(TripRecordingViewModel::class.java)) {
-                return TripRecordingViewModel(tripRepository, userProfileRepository, fusedLocationClient) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
+            return TripRecordingViewModel(application, tripRepository, userProfileRepository) as T
         }
     }
 }
