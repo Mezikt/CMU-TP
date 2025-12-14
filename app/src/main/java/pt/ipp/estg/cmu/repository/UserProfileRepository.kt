@@ -239,15 +239,14 @@ class UserProfileRepository(private val userProfileDao: UserProfileDao) {
     }
 
     private fun documentToUserProfile(document: DocumentSnapshot): UserProfileEntity {
-        return UserProfileEntity().apply {
-            uid = document.id
-            name = document.getString("name") ?: "Unknown"
-            email = document.getString("email") ?: ""
-            points = document.getLong("points") ?: 0L
-            photoUrl = document.getString("photoUrl") ?: ""
-            friends = emptyList()
-            friendRequestsReceived = emptyList()
-            friendRequestsSent = emptyList()
-        }
+        val user = UserProfileEntity()
+
+        user.uid = document.id
+        user.name = document.getString("name") ?: "Sem Nome"
+        user.email = document.getString("email") ?: ""
+        user.points = document.getLong("points") ?: 0L
+        user.photoUrl = document.getString("photoUrl") ?: ""
+
+        return user
     }
 }
