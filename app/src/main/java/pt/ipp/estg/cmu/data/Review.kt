@@ -13,10 +13,10 @@ import com.google.firebase.firestore.ServerTimestamp
  * @property date The timestamp when the review was submitted.
  */
 data class Review(
-    val pointId: String = "",
-    val userId: String = "",
-    val rating: Int = 0,
-    val comment: String = "",
+    var pointId: String = "",
+    var userId: String = "",
+    var rating: Int = 0,
+    var comment: String = "",
     @ServerTimestamp
-    val date: Timestamp? = null // Firestore will automatically set this
+    var date: Timestamp? = null // Firestore will automatically set this
 )

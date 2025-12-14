@@ -2,6 +2,7 @@ package pt.ipp.estg.cmu.ui.Content
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Announcement
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Logout
@@ -28,6 +29,7 @@ fun ProfilePage(
     onNavigateToHistory: () -> Unit,
     onNavigateToFriends: () -> Unit,
     onNavigateToLeaderboard: () -> Unit,
+    onNavigateToReviews: () -> Unit,
     profileViewModel: ProfileViewModel = viewModel()
 ) {
     val userProfile by profileViewModel.userProfile.collectAsState(initial = null)
@@ -59,6 +61,7 @@ fun ProfilePage(
                     onNavigateToHistory = onNavigateToHistory,
                     onNavigateToFriends = onNavigateToFriends,
                     onNavigateToLeaderboard = onNavigateToLeaderboard,
+                    onNavigateToReviews = onNavigateToReviews,
                     onLogout = {
                         profileViewModel.onLogout()
                         onLogout()
@@ -98,6 +101,7 @@ private fun ProfileContent(
     onNavigateToHistory: () -> Unit,
     onNavigateToFriends: () -> Unit,
     onNavigateToLeaderboard: () -> Unit,
+    onNavigateToReviews:() -> Unit,
     onLogout: () -> Unit
 ) {
     Column(
@@ -149,6 +153,12 @@ private fun ProfileContent(
             icon = Icons.Filled.Leaderboard,
             text = stringResource(R.string.title_leaderboard),
             onClick = onNavigateToLeaderboard
+        )
+        Divider()
+        ProfileMenuItem(
+            icon = Icons.Filled.Announcement,
+            text = stringResource(R.string.profile_reviews),
+            onClick = onNavigateToReviews
         )
 
         Spacer(modifier = Modifier.weight(1f))

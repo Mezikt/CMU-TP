@@ -41,6 +41,7 @@
     <string name="btn_find_ride">Find a Ride</string>
     <string name="btn_record_trip">Record a Trip</string>
     <string name="title_leaderboard">Leaderboard</string>
+    <string name="profile_reviews">Review</string>
     <string name="desc_leaderboard_promo">See how you compare to other users.</string>
     <string name="btn_view_leaderboard">View Leaderboard</string>
 
@@ -49,6 +50,10 @@
     <string name="msg_no_friends_leaderboard">You have no friends on the leaderboard yet!</string>
     <string name="msg_empty_leaderboard">The leaderboard is currently empty.</string>
     <string name="label_pts">pts</string>
+    <string name="msg_no_reviews">No reviews submitted.</string>
+    <string name="msg_empty_reviews">Reviews are empty.</string>
+    <string name="no_comment">No comment</string>
+
 
     <string name="nav_home">Home</string>
     <string name="nav_map">Map</string>

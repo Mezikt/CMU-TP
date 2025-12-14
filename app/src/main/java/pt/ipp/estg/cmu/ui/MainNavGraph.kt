@@ -30,7 +30,8 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
                 },
                 onNavigateToHistory = { navController.navigate("history") },
                 onNavigateToFriends = { navController.navigate("friends") },
-                onNavigateToLeaderboard = { navController.navigate("leaderboard") } // Added navigation to Leaderboard
+                onNavigateToLeaderboard = { navController.navigate("leaderboard") } ,
+                onNavigateToReviews = { navController.navigate("review") }
             )
         }
         composable("settings") {
@@ -51,6 +52,11 @@ fun NavGraphBuilder.mainNavGraph(navController: NavHostController) {
         composable("leaderboard") { // Add new destination for the Leaderboard
             LeaderboardPage(onNavigateBack = { navController.navigateUp() })
         }
+
+        composable("review") {
+            ReviewAllPage(onNavigateBack = { navController.navigateUp() })
+        }
+
 
         composable(
             route = "review/{pointId}",

@@ -40,8 +40,13 @@
     <string name="btn_find_ride">Encontrar Viagem</string>
     <string name="btn_record_trip">Gravar Viagem</string>
     <string name="title_leaderboard">Classificações</string>
+    <string name="profile_reviews">Avaliações</string>
+    <string name="msg_no_reviews">Ainda não tens avaliações.</string>
+    <string name="msg_empty_reviews">As avaliações estão vazias de momento.</string>
     <string name="desc_leaderboard_promo">Vê como te comparas com outros utilizadores.</string>
     <string name="btn_view_leaderboard">Ver Classificações</string>
+    <string name="no_comment">Sem comentário</string>
+
 
     <string name="filter_global">Global</string>
     <string name="filter_friends_btn">Amigos</string>
