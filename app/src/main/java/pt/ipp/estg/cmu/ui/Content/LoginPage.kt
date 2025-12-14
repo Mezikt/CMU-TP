@@ -18,12 +18,16 @@ import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import pt.ipp.estg.cmu.R
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 
 @Composable
 fun LoginPage(
     modifier: Modifier = Modifier,
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
+
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -39,6 +43,9 @@ fun LoginPage(
         contentAlignment = Alignment.Center
     ) {
         Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {

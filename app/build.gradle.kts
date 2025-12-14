@@ -9,7 +9,7 @@ plugins {
 }
 
 
-// Lógica para ler o ficheiro properties
+
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
@@ -33,10 +33,8 @@ android {
             useSupportLibrary = true
         }
 
-        // --- INÍCIO DA CORREÇÃO ---
-        // Esta linha torna a chave disponível para o AndroidManifest.xml
         manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY") ?: "CHAVE_NAO_ENCONTRADA"
-        // --- FIM DA CORREÇÃO ---
+
     }
 
     buildTypes {
@@ -90,7 +88,7 @@ dependencies {
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
-    implementation("com.google.maps.android:android-maps-utils:2.3.0") // FIX: Add maps-utils
+    implementation("com.google.maps.android:android-maps-utils:2.3.0")
 
     // Teste
     testImplementation(libs.junit)
@@ -110,4 +108,6 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
+
+    implementation("io.coil-kt:coil-compose:2.4.0")
 }
